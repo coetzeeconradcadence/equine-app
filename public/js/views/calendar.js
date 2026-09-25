@@ -23,6 +23,7 @@ function buildGrid(mk) {
 
 export async function calendarView() {
   const data = await loadAll();
+  const horsesById = Object.fromEntries(data.horses.map((h) => [h.id, h]));
   const items = calendarEntries(data);
   const byDate = groupBy(items, (i) => i.date);
   const cells = buildGrid(state.month);
@@ -41,17 +42,24 @@ export async function calendarView() {
       ${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => html`<div class="cal-dow">${d}</div>`)}
       ${cells.map((date) => {
         if (!date) return html`<div class="cal-cell empty"></div>`;
-        const dayItems = byDate[date] || [];
-        const kinds = [...new Set(dayItems.map((i) => i.kind))];
-        return html`<div class="cal-cell ${date === todayStr ? 'today' : ''} ${dayItems.length ? 'clickable' : ''}" ${raw(dayItems.length ? `data-action="cal-day" data-date="${esc(date)}"` : '')}>
+        const dayItems = sortBy(byDate[date] || [], (i) => i.kind);
+        // Hover tooltip lists every item on this day, one line each, so you don't have to open it to see what's on.
+        const tooltip = dayItems.map((i) => `${i.icon} ${horsesById[i.horseId] ? horsesById[i.horseId].name + ': ' : ''}${i.title}${i.sub ? ' – ' + i.sub : ''}`).join('\n');
+        const attrs = dayItems.length ? `data-action="cal-day" data-date="${esc(date)}" title="${esc(tooltip)}"` : '';
+        const icons = dayItems.slice(0, 3);
+        const label = dayItems[0] ? (horsesById[dayItems[0].horseId] ? horsesById[dayItems[0].horseId].name + ': ' : '') + dayItems[0].title : '';
+        return html`<div class="cal-cell ${date === todayStr ? 'today' : ''} ${dayItems.length ? 'clickable' : ''}" ${raw(attrs)}>
           <div class="cal-daynum">${Number(date.slice(8))}</div>
-          ${kinds.length ? html`<div class="cal-dots">${kinds.slice(0, 5).map((k) => html`<span class="cal-dot" style="background:${raw(CALENDAR_KINDS[k]?.dot || '#999')}"></span>`)}</div>` : ''}
+          ${dayItems.length ? html`
+            <div class="cal-icons">${icons.map((i) => html`<span>${i.icon}</span>`)}${dayItems.length > 3 ? html`<span class="cal-more">+${dayItems.length - 3}</span>` : ''}</div>
+            <div class="cal-label">${label}</div>` : ''}
         </div>`;
       })}
     </div>
     <div class="row small muted" style="margin-top:14px;flex-wrap:wrap;gap:10px">
-      ${Object.entries(CALENDAR_KINDS).map(([k, v]) => html`<span class="row" style="gap:5px"><span class="cal-dot" style="background:${v.dot}"></span>${v.label}</span>`)}
+      ${Object.entries(CALENDAR_KINDS).map(([, v]) => html`<span class="row" style="gap:5px"><span>${v.icon}</span>${v.label}</span>`)}
     </div>
+    <p class="small muted" style="margin-top:6px">Tip: on a computer, hover over a day to see everything on it. On a phone, tap the day to open the same list.</p>
     ${!monthItems.length ? html`<p class="muted small" style="margin-top:16px">Nothing planned this month yet – shows, reminders, health next-due dates (including the farrier) and the AHS season all show up here automatically.</p>` : ''}`;
 }
 

@@ -93,12 +93,12 @@ export function calendarEntries({ horses, health, reminders, events, docs }) {
 }
 
 export const CALENDAR_KINDS = {
-  health: { label: 'Health record', dot: '#3f6fa8' },
-  due: { label: 'Due (health / farrier)', dot: '#c9852e' },
-  reminder: { label: 'Reminder', dot: '#c9a52e' },
-  event: { label: 'Show / event', dot: '#8a4fc9' },
-  doc: { label: 'Document expiring', dot: '#4fa3c9' },
-  ahs: { label: 'AHS season', dot: '#c94f4f' },
+  health: { label: 'Health record', dot: '#3f6fa8', icon: '🩺' },
+  due: { label: 'Due (health / farrier)', dot: '#c9852e', icon: '⏰' },
+  reminder: { label: 'Reminder', dot: '#c9a52e', icon: '🔔' },
+  event: { label: 'Show / event', dot: '#8a4fc9', icon: '🏆' },
+  doc: { label: 'Document expiring', dot: '#4fa3c9', icon: '📄' },
+  ahs: { label: 'AHS season', dot: '#c94f4f', icon: '🦟' },
 };
 
 export const dueTone = (date) => {
