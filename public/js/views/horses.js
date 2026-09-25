@@ -2,7 +2,7 @@ import * as db from '../db.js';
 import { html, raw, esc, fmtDate, ageFrom, today, money, sum, sortBy, groupBy, addDays, parse, iso, monthKey, fmtMonth } from '../util.js';
 import { avatar, pill, empty, addBtn, dueItem, healthItem, eventItem, expenseItem, trainingItem, resultLine, sparkline, bars } from './components.js';
 import { ahsTravel, ahsSeason, eventTravelCheck, AHS_DISCLAIMER } from '../ahs.js';
-import { loadAll, computeDue } from '../due.js';
+import { loadAll, computeDue, dueTone } from '../due.js';
 import { healthIcon, FEED_TIMES, DISCIPLINES } from '../schemas.js';
 
 export async function horsesView() {
@@ -22,7 +22,7 @@ export async function horsesView() {
 }
 
 const TABS = [
-  ['overview', 'Overview'], ['health', 'Health'], ['feeding', 'Feeding'], ['training', 'Training'],
+  ['overview', 'Overview'], ['health', 'Health'], ['farrier', 'Farrier'], ['feeding', 'Feeding'], ['training', 'Training'],
   ['shows', 'Shows & results'], ['costs', 'Costs'], ['docs', 'Documents'], ['timeline', 'Timeline'],
 ];
 const filters = { health: 'All', shows: 'All' };
@@ -38,7 +38,7 @@ export async function horseView(id, tab = 'overview') {
     expenses: mine(expenses), docs: mine(docs), reminders: mine(reminders),
     providersById: Object.fromEntries(providers.map((p) => [p.id, p])),
   };
-  const body = await ({ overview, health: healthTab, feeding, training: trainingTab, shows, costs, docs: docsTab, timeline }[tab] || overview)(d);
+  const body = await ({ overview, health: healthTab, farrier: farrierTab, feeding, training: trainingTab, shows, costs, docs: docsTab, timeline }[tab] || overview)(d);
   return html`
     <div class="row" style="gap:12px;align-items:center">
       ${avatar(horse, 'lg')}
@@ -128,6 +128,45 @@ function healthTab(d) {
     ${active.length ? html`<div class="callout warn" style="margin-top:12px">💊 On treatment: ${active.map((r) => `${r.product || r.title || r.type} until ${fmtDate(r.endDate)}`).join('; ')}</div>` : ''}
     <div class="tabs">${Object.keys(HEALTH_FILTERS).map((k) => html`<button class="tab ${k === f ? 'active' : ''}" data-action="filter" data-filter="health" data-value="${k}">${k}</button>`)}</div>
     <div class="list">${list.length ? list.map((r) => healthItem(r, d.providersById)) : empty('No records here yet.')}</div>`;
+}
+
+// ---------------- Farrier ----------------
+// Fields researched against general farriery record-keeping (TheHorse.com's hoof care record,
+// Mad Barn's farrier-care guide, EquineGo's shoeing/hoof chart): trim/shoeing type, shoe material,
+// hoof type & size, condition issues (cracks, thrush, flares, etc.) and the farrier's own feedback,
+// alongside who did it, cost and the next-due date already tracked on every health record.
+function farrierTab(d) {
+  const list = sortBy(d.health.filter((r) => r.type === 'Farrier'), (r) => r.date, -1);
+  const last = list[0];
+  return html`
+    <div class="row between"><h2 style="margin:0">🔨 Farrier & hoof care</h2>${addBtn('health', 'Log farrier visit', { horseId: d.horse.id, type: 'Farrier' }, 'primary sm')}</div>
+    ${last ? html`
+      <div class="card" style="margin-top:12px">
+        <div class="row between"><h3 style="margin:0">Latest visit</h3>${last.nextDue ? pill('Next due ' + fmtDate(last.nextDue), dueTone(last.nextDue)) : ''}</div>
+        <table style="margin-top:6px"><tbody>
+          <tr><th style="width:35%">Date</th><td>${fmtDate(last.date)}</td></tr>
+          <tr><th>Farrier</th><td>${d.providersById[last.providerId]?.name || '—'}</td></tr>
+          <tr><th>Trim / shoeing</th><td>${last.trimType || '—'}${last.shoeMaterial ? ' · ' + last.shoeMaterial : ''}</td></tr>
+          <tr><th>Hoof type</th><td>${last.hoofType || '—'}</td></tr>
+          <tr><th>Size – front</th><td>${last.hoofSizeFront || '—'}</td></tr>
+          <tr><th>Size – hind</th><td>${last.hoofSizeHind || '—'}</td></tr>
+          ${last.cost ? html`<tr><th>Cost</th><td>${money(last.cost)}</td></tr>` : ''}
+        </tbody></table>
+        ${last.hoofIssues?.length ? html`<div class="row" style="margin-top:8px">${last.hoofIssues.map((i) => pill(i, i === 'None noted' ? 'good' : 'warn'))}</div>` : ''}
+        ${last.farrierFeedback ? html`<div class="callout" style="margin-top:8px"><strong>Farrier's feedback:</strong> ${last.farrierFeedback}</div>` : ''}
+        ${last.notes ? html`<p class="small muted" style="margin-top:8px">${last.notes}</p>` : ''}
+      </div>` : ''}
+    <div class="section"><h2>Visit history</h2></div>
+    <div class="list">${list.length ? list.map((r) => html`
+      <div class="item clickable" data-action="edit" data-schema="health" data-id="${r.id}">
+        <div style="font-size:1.4rem">🔨</div>
+        <div class="grow">
+          <div class="title">${r.trimType || 'Farrier visit'}${r.shoeMaterial ? ' · ' + r.shoeMaterial : ''}</div>
+          <div class="meta">${fmtDate(r.date)}${d.providersById[r.providerId] ? ' · ' + d.providersById[r.providerId].name : ''}${r.cost ? ' · ' + money(r.cost) : ''}</div>
+          ${r.hoofIssues?.length && !r.hoofIssues.includes('None noted') ? html`<div class="meta">⚠ ${r.hoofIssues.join(', ')}</div>` : ''}
+          ${r.nextDue ? html`<div class="meta">Next due ${fmtDate(r.nextDue)}</div>` : ''}
+        </div>
+      </div>`) : empty('No farrier visits logged yet.', addBtn('health', 'Log the first visit', { horseId: d.horse.id, type: 'Farrier' }, 'primary'))}</div>`;
 }
 
 // ---------------- Feeding ----------------

@@ -1,6 +1,6 @@
 import * as db from './db.js';
 import { APP } from './config.js';
-import { $, $$, toast, download, dataUrlToBlob, setCurrency, today } from './util.js';
+import { $, $$, toast, download, dataUrlToBlob, setCurrency, today, fmtDate } from './util.js';
 import { openForm, openSheet, closeSheet } from './forms.js';
 import { SCHEMAS } from './schemas.js';
 import { loadAll, computeDue, completeReminder, toIcs } from './due.js';
@@ -10,6 +10,7 @@ import { horsesView, horseView, setFilter } from './views/horses.js';
 import { remindersView, expensesView, eventsView, providersView, moreView, setListState, expensesCsv } from './views/lists.js';
 import { printView, feedboardView, togglePrint } from './views/print.js';
 import { feedOrderView, feedOrderCsv, setFeedOrderTab, addFeedOrderColumn, removeFeedOrderColumn } from './views/feedorder.js';
+import { calendarView, setCalMonth, calendarDayBody } from './views/calendar.js';
 import { seedFeedCatalogIfEmpty } from './feedseed.js';
 import { blogView, postView, postPublishJson } from './views/blog.js';
 import { aiView, sendQuestion, setAiHorse, clearAi, buildContext, aiSelected } from './views/ai.js';
@@ -58,6 +59,7 @@ async function route() {
     case 'print': return ['horses', await printView(b)];
     case 'feedboard': return ['more', await feedboardView()];
     case 'feedorder': return ['more', await feedOrderView()];
+    case 'calendar': return ['more', await calendarView()];
     case 'blog': return ['more', b === 'draft' ? await postView(c, true) : b ? await postView(b) : await blogView()];
     case 'ai': return ['more', await aiView(params)];
     case 'settings': return ['more', await settingsView()];
@@ -162,6 +164,21 @@ const actions = {
   'fo-tab': (el) => { setFeedOrderTab(el.dataset.v); render(); },
   'fo-csv': async () => download(`${APP.name.toLowerCase()}-feed-order-${today()}.csv`, await feedOrderCsv(), 'text/csv'),
   'fo-remove-col': async (el) => { await removeFeedOrderColumn(el.dataset.id); render(); },
+  'cal-nav': (el) => { setCalMonth(Number(el.dataset.v)); render(); },
+  'cal-day': async (el) => {
+    const date = el.dataset.date;
+    const body = await calendarDayBody(date);
+    openSheet(fmtDate(date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }), body, (d) => {
+      $$('[data-cal-item]', d).forEach((b) => (b.onclick = async () => {
+        const schemaByKind = { health: 'health', due: 'health', event: 'event', reminder: 'reminder', doc: 'doc' };
+        const schema = schemaByKind[b.dataset.kind];
+        d.close();
+        if (!schema) return;
+        const rec = await db.get(SCHEMAS[schema].store, b.dataset.id);
+        if (rec) openForm(schema, rec);
+      }));
+    });
+  },
   print: () => window.print(),
   'toggle-print': (el) => { togglePrint(el.dataset.k); render(); },
   'share-horse': async (el) => {

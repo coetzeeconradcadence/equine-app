@@ -62,6 +62,16 @@ export const FEED_BRANDS = [
 ];
 export const FEED_CATEGORIES = ['Hard feed / concentrate', 'Balancer / pellet', 'Roughage (hay / lucerne / chaff)', 'Supplement', 'Bran / chop', 'Other'];
 
+// --- Farrier visit detail (researched against general farriery practice: TheHorse.com's hoof
+// care record, Mad Barn's farrier-care guide and EquineGo's shoeing/hoof chart all track a trim
+// or shoeing type, shoe material, hoof balance/condition issues, and farrier notes alongside the
+// next due date, which is what this mirrors). See public/js/schemas.js SCHEMAS.health for use.
+export const TRIM_TYPES = ['Barefoot trim', 'Front shoes only', 'Hind shoes only', 'Full set (front + hind)', 'Therapeutic / corrective shoeing', 'Glue-on shoes', 'Pads added', 'Other'];
+export const SHOE_MATERIALS = ['Steel', 'Aluminium', 'Composite / plastic', 'Other'];
+export const HOOF_TYPES = ['Normal / well balanced', 'Flat soles / low heels', 'Upright / boxy', 'Contracted heels', 'Long toe, low heel', 'Club foot', 'Thin / sensitive soles', 'Other'];
+export const HOOF_ISSUES = ['Cracks', 'Thrush', 'White line disease', 'Flares', 'Bruising', 'Abscess history', 'Sensitive soles', 'None noted'];
+const farrierOnly = (v) => v.type === 'Farrier';
+
 const isResult = (v) => v.status === 'Completed';
 const disc = (...d) => (v) => isResult(v) && d.includes(v.discipline);
 
@@ -103,7 +113,14 @@ export const SCHEMAS = {
       { k: 'dose', label: 'Dose & frequency', type: 'text', showIf: (v) => ['Treatment / medication', 'Deworming', 'Injury / illness'].includes(v.type) },
       { k: 'endDate', label: 'Treatment end date', type: 'date', showIf: (v) => ['Treatment / medication', 'Injury / illness'].includes(v.type) },
       { k: 'providerId', label: 'Done by', type: 'provider' },
-      { k: 'nextDue', label: 'Next due', type: 'date', suggest: (v) => suggestNext(v.type, v.date), hint: 'Suggested from typical intervals – change it to what your vet advises.' },
+      { k: 'trimType', label: 'Trim / shoeing type', type: 'select', options: TRIM_TYPES, showIf: farrierOnly },
+      { k: 'shoeMaterial', label: 'Shoe material', type: 'select', options: SHOE_MATERIALS, showIf: (v) => farrierOnly(v) && v.trimType && v.trimType !== 'Barefoot trim' },
+      { k: 'hoofType', label: 'Hoof type / conformation', type: 'select', options: HOOF_TYPES, showIf: farrierOnly },
+      { k: 'hoofSizeFront', label: 'Shoe / hoof size – front', type: 'text', placeholder: 'e.g. size 1, or 120mm wide', showIf: farrierOnly },
+      { k: 'hoofSizeHind', label: 'Shoe / hoof size – hind', type: 'text', placeholder: 'e.g. size 0, or 110mm wide', showIf: farrierOnly },
+      { k: 'hoofIssues', label: 'Hoof condition / issues noted', type: 'multi', options: HOOF_ISSUES, full: true, showIf: farrierOnly },
+      { k: 'farrierFeedback', label: 'Farrier’s feedback & recommendations', type: 'textarea', full: true, showIf: farrierOnly, hint: 'What the farrier said this visit – trends to watch, what to change next time.' },
+      { k: 'nextDue', label: 'Next due', type: 'date', suggest: (v) => suggestNext(v.type, v.date), hint: 'Suggested from typical intervals – change it to what your vet/farrier advises.' },
       { k: 'cost', label: 'Cost', type: 'money' },
       { k: 'logExpense', label: 'Also add this cost to expenses', type: 'checkbox', createOnly: true, default: true, showIf: (v) => Number(v.cost) > 0 },
       { k: 'photo', label: 'Photo (e.g. passport page, wound)', type: 'photo' },

@@ -19,7 +19,8 @@ export async function remindersView() {
   return html`
     <div class="page-head"><h1>What's due</h1>
       <div class="row">${addBtn('reminder', 'Reminder', {}, 'primary sm')}
-      <button class="sm" data-action="ics-all" ${items.length ? '' : 'disabled'}>📅 Add to calendar</button></div></div>
+      <a class="btn sm" href="#/calendar">📅 Calendar view</a>
+      <button class="sm" data-action="ics-all" ${items.length ? '' : 'disabled'}>⬇︎ Add to phone calendar</button></div></div>
     <div class="tabs">${[30, 60, 90, 365].map((n) => html`<button class="tab ${state.dueHorizon === n ? 'active' : ''}" data-action="list-state" data-k="dueHorizon" data-v="${n}">Next ${n === 365 ? 'year' : n + ' days'}</button>`)}</div>
     ${overdue.length ? html`<div class="section"><h2>Overdue</h2>${pill(overdue.length, 'bad')}</div><div class="list">${overdue.map((i) => dueItem(i, byId))}</div>` : ''}
     <div class="section"><h2>Upcoming</h2></div>
@@ -119,6 +120,7 @@ export function moreView() {
   return html`
     <h1>More</h1>
     <div class="list">
+      ${link('#/calendar', '📅', 'Calendar', 'Month view of shows, reminders and health/farrier due dates')}
       ${link('#/events', '🏆', 'Shows & events', 'Entries, results and AHS travel checks')}
       ${link('#/providers', '📇', 'Contacts', 'Vet, farrier, dentist, coach, transport')}
       ${link('#/feedboard', '🌾', 'Yard feed board', 'Printable feed chart for all horses')}

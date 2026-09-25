@@ -54,6 +54,53 @@ export function computeDue({ horses, health, reminders, events, docs }, { horizo
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 }
 
+// ---------- Calendar (month planner) ----------
+// Everything that has a date, past or future: health visits (incl. farrier) on the day they
+// happened, their next-due date, reminders, shows/events, expiring documents and the AHS season.
+// Adding an event or a health record needs no extra wiring – the calendar just reads the same
+// stores computeDue() does, plus history, so it's always in sync.
+export function calendarEntries({ horses, health, reminders, events, docs }) {
+  const items = [];
+  const horseIds = new Set(horses.map((h) => h.id));
+  const validHealth = health.filter((r) => horseIds.has(r.horseId));
+
+  for (const r of validHealth) {
+    if (!r.date) continue;
+    items.push({ kind: 'health', key: 'hh' + r.id, date: r.date, horseId: r.horseId, icon: healthIcon(r.type), title: r.type, sub: r.title || '', ref: r });
+  }
+  const groups = groupBy(validHealth, (r) => r.horseId + '|' + r.type);
+  for (const recs of Object.values(groups)) {
+    const latest = recs.sort((a, b) => (a.date < b.date ? 1 : -1))[0];
+    if (latest.nextDue) items.push({ kind: 'due', key: 'hd' + latest.id, date: latest.nextDue, horseId: latest.horseId, icon: healthIcon(latest.type), title: `${latest.type} due`, sub: latest.title || '', ref: latest });
+  }
+  for (const r of reminders) {
+    if (r.done) continue;
+    items.push({ kind: 'reminder', key: 'r' + r.id, date: r.date, horseId: r.horseId, icon: '🔔', title: r.title, sub: r.repeat && r.repeat !== 'Never' ? `Repeats ${r.repeat.toLowerCase()}` : '', ref: r });
+  }
+  for (const e of events) {
+    if (!e.date) continue;
+    items.push({ kind: 'event', key: 'e' + e.id, date: e.date, horseId: e.horseId, icon: e.status === 'Completed' ? '🏅' : '🏆', title: e.name, sub: [e.discipline, e.level, e.venue].filter(Boolean).join(' · '), ref: e });
+  }
+  for (const d of docs) {
+    if (!d.expires) continue;
+    items.push({ kind: 'doc', key: 'd' + d.id, date: d.expires, horseId: d.horseId, icon: '📄', title: `${d.title} expires`, sub: d.category, ref: d });
+  }
+  for (const h of horses) {
+    const s = ahsSeason(h, validHealth.filter((r) => r.horseId === h.id));
+    if (s.date) items.push({ kind: 'ahs', key: 'a' + h.id, date: s.date, horseId: h.id, icon: '🦟', title: 'AHS vaccination window', sub: s.label, tone: s.tone, ref: h });
+  }
+  return items.filter((i) => i.date);
+}
+
+export const CALENDAR_KINDS = {
+  health: { label: 'Health record', dot: '#3f6fa8' },
+  due: { label: 'Due (health / farrier)', dot: '#c9852e' },
+  reminder: { label: 'Reminder', dot: '#c9a52e' },
+  event: { label: 'Show / event', dot: '#8a4fc9' },
+  doc: { label: 'Document expiring', dot: '#4fa3c9' },
+  ahs: { label: 'AHS season', dot: '#c94f4f' },
+};
+
 export const dueTone = (date) => {
   const n = diffDays(today(), date);
   return n < 0 ? 'bad' : n <= 7 ? 'warn' : 'info';

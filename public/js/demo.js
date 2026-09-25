@@ -37,13 +37,20 @@ export async function loadDemo() {
   await H({ horseId: biscuit.id, type: 'AHS vaccination', date: d(-25), title: 'Annual AHS booster', product: 'OBP AHS bottle 2', providerId: vet.id, nextDue: addMonths(d(-25), 12), cost: 650 });
   await H({ horseId: biscuit.id, type: 'AHS vaccination', date: d(-390), title: 'AHS bottle 1', providerId: vet.id });
   await H({ horseId: biscuit.id, type: 'Equine flu vaccination', date: d(-170), providerId: vet.id, nextDue: d(10), product: 'Equilis Prequenza Te' });
-  await H({ horseId: biscuit.id, type: 'Farrier', date: d(-39), title: 'Full set, fronts with pads', providerId: farrier.id, nextDue: d(3), cost: 1100 });
+  await H({ horseId: biscuit.id, type: 'Farrier', date: d(-39), title: 'Full set, fronts with pads', providerId: farrier.id, nextDue: d(3), cost: 1100,
+    trimType: 'Full set (front + hind)', shoeMaterial: 'Steel', hoofType: 'Flat soles / low heels', hoofSizeFront: 'Size 1', hoofSizeHind: 'Size 0',
+    hoofIssues: ['Bruising'], farrierFeedback: 'Slightly flat through the front soles – added pads this cycle. Keep the 6-week interval, watch for bruising after hard ground.' });
+  await H({ horseId: biscuit.id, type: 'Farrier', date: d(-81), title: 'Full set', providerId: farrier.id, cost: 950,
+    trimType: 'Full set (front + hind)', shoeMaterial: 'Steel', hoofType: 'Flat soles / low heels', hoofSizeFront: 'Size 1', hoofSizeHind: 'Size 0',
+    hoofIssues: ['None noted'], farrierFeedback: 'Good growth this cycle, feet balanced up nicely.' });
   await H({ horseId: biscuit.id, type: 'Deworming', date: d(-95), product: 'Ivermectin paste', nextDue: d(-5) });
   await H({ horseId: biscuit.id, type: 'Dentist', date: d(-300), providerId: dentist.id, nextDue: d(65), cost: 950 });
   await H({ horseId: biscuit.id, type: 'Injury / illness', date: d(-60), title: 'Small cut left hind', notes: 'Cleaned, Betadine, healed in a week', endDate: d(-53) });
   // Luna – AHS fine for travel but annual window still open
   await H({ horseId: luna.id, type: 'AHS vaccination', date: d(-300), title: 'AHS bottle 2', providerId: vet.id, product: 'OBP AHS bottle 2' });
-  await H({ horseId: luna.id, type: 'Farrier', date: d(-20), title: 'Trim + fronts', providerId: farrier.id, nextDue: d(22), cost: 750 });
+  await H({ horseId: luna.id, type: 'Farrier', date: d(-20), title: 'Trim + fronts', providerId: farrier.id, nextDue: d(22), cost: 750,
+    trimType: 'Front shoes only', shoeMaterial: 'Aluminium', hoofType: 'Normal / well balanced', hoofSizeFront: 'Size 0', hoofSizeHind: 'Barefoot',
+    hoofIssues: ['None noted'], farrierFeedback: 'Feet in great shape. Aluminium fronts for competition, barefoot behind is working well.' });
   await H({ horseId: luna.id, type: 'Physio / chiro', date: d(-45), title: 'Tight through the back', nextDue: d(11), cost: 700 });
   await H({ horseId: luna.id, type: 'Treatment / medication', date: d(-3), title: 'Bute for sore foot', product: 'Phenylbutazone', dose: '1 sachet twice daily', endDate: d(4), providerId: vet.id });
 
