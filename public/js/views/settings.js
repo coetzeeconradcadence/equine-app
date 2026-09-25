@@ -38,6 +38,7 @@ export async function settingsView() {
         <div class="row">
           <button data-action="load-demo">Load demo horses</button>
           <button class="danger" data-action="clear-all">Delete all data</button>
+          <button data-action="replay-welcome">🐎 Replay welcome screen</button>
         </div>
       </div>
 

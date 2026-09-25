@@ -19,6 +19,23 @@ const view = $('#view');
 document.title = APP.name;
 $('#app-name').textContent = APP.name;
 
+// ---------------- Welcome / splash screen ----------------
+const WELCOME_KEY = 'hoofnote-welcome-seen';
+(function initWelcome() {
+  const el = document.getElementById('welcome');
+  if (!el) return;
+  let seen = false;
+  try { seen = localStorage.getItem(WELCOME_KEY) === '1'; } catch {}
+  if (seen) { el.remove(); return; }
+  const dismiss = () => {
+    try { localStorage.setItem(WELCOME_KEY, '1'); } catch {}
+    el.classList.add('hide');
+    setTimeout(() => el.remove(), 550);
+  };
+  $('#welcome-go', el)?.addEventListener('click', dismiss);
+  el.addEventListener('click', (e) => { if (e.target === el) dismiss(); });
+})();
+
 // ---------------- Routing ----------------
 function parseHash() {
   const h = location.hash.replace(/^#\/?/, '');
@@ -173,6 +190,7 @@ const actions = {
     await db.clearAll(); toast('All data deleted');
   },
   backup: async () => download(`${APP.name.toLowerCase()}-backup-${today()}.json`, JSON.stringify(await db.exportAll())),
+  'replay-welcome': () => { try { localStorage.removeItem(WELCOME_KEY); } catch {} location.reload(); },
 };
 const changeActions = {
   'list-state': (el) => { setListState(el.dataset.k, el.value); render(); },
