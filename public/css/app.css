@@ -263,7 +263,13 @@ td.num, th.num { text-align: right; }
   background: #0a100c; transition: opacity .5s ease, visibility .5s ease;
 }
 .welcome.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-.welcome-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 42%; }
+.welcome-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 78%; }
+/* On wide/short windows (desktop browsers, landscape tablets) a full-bleed vertical crop can crop
+   the subject out entirely – switch to letterboxed "contain" on the dark background instead, so
+   the whole photo (and the horses in it) is always visible, never guessed away by a crop. */
+@media (min-aspect-ratio: 3/2) {
+  .welcome-bg { object-fit: contain; object-position: center center; }
+}
 .welcome-scrim {
   position: absolute; inset: 0;
   background: linear-gradient(180deg, rgba(8, 14, 10, .1) 0%, rgba(8, 14, 10, .22) 38%, rgba(7, 12, 9, .82) 76%, #070c09 100%);
