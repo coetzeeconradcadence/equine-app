@@ -117,6 +117,7 @@ export async function providersView() {
 // ---------- More ----------
 export function moreView() {
   const link = (href, icon, title, sub) => html`<a class="item clickable" href="${href}" style="text-decoration:none;color:inherit"><div style="font-size:1.4rem">${icon}</div><div class="grow"><div class="title">${title}</div><div class="meta">${sub}</div></div><span class="muted">›</span></a>`;
+  const actionItem = (action, icon, title, sub) => html`<button type="button" class="item clickable" data-action="${action}" style="justify-content:flex-start;text-align:left;font-weight:400;width:100%"><div style="font-size:1.4rem">${icon}</div><div class="grow"><div class="title">${title}</div><div class="meta">${sub}</div></div><span class="muted">›</span></button>`;
   return html`
     <h1>More</h1>
     <div class="list">
@@ -127,6 +128,7 @@ export function moreView() {
       ${link('#/feedorder', '🧮', 'Feed order & catalog', 'Scoops, bags and cost per horse, worked out for you')}
       ${link('#/ai', '✨', 'Ask AI', 'Questions answered using your horse’s records')}
       ${link('#/blog', '📰', 'Blog & videos', 'Tips, training videos and stories')}
+      ${actionItem('replay-welcome', '🐴', 'Welcome screen', 'See the app intro again')}
       ${link('#/settings', '⚙️', 'Settings & backup', 'Export, import, currency, demo data')}
     </div>`;
 }
