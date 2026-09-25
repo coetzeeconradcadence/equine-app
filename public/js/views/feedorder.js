@@ -11,6 +11,33 @@ const state = { tab: 'order' };
 export const setFeedOrderTab = (t) => { state.tab = t; };
 export const feedOrderTab = () => state.tab;
 
+// Which catalog feeds show as columns on the Order grid is a per-yard choice – some owners feed
+// one thing, others a dozen – so it's a persisted setting, not "every catalog feed automatically".
+// Owners pick from a dropdown and each choice adds a column; nothing is deleted, just hidden.
+const COLS_KEY = 'feedOrderColumns';
+async function resolveColumns(validIds, feedItems) {
+  const saved = await db.getSetting(COLS_KEY, null);
+  if (saved != null) return saved.filter((id) => validIds.has(id));
+  // First time: auto-populate from whatever feed items already reference a catalog feed,
+  // so nobody's existing order grid appears to go blank the day this shipped.
+  return [...new Set(feedItems.map((f) => f.feedId).filter((id) => id && validIds.has(id)))];
+}
+async function currentColumns() {
+  const [catalog, feedItems] = await Promise.all([db.all('feedcatalog'), db.all('feed')]);
+  return { validIds: new Set(catalog.map((c) => c.id)), feedItems };
+}
+export async function addFeedOrderColumn(id) {
+  if (!id) return;
+  const { validIds, feedItems } = await currentColumns();
+  const cols = await resolveColumns(validIds, feedItems);
+  if (!cols.includes(id)) await db.setSetting(COLS_KEY, [...cols, id]);
+}
+export async function removeFeedOrderColumn(id) {
+  const { validIds, feedItems } = await currentColumns();
+  const cols = await resolveColumns(validIds, feedItems);
+  await db.setSetting(COLS_KEY, cols.filter((c) => c !== id));
+}
+
 const qtyLabel = (c) => (c.measure === 'Weight (kg)' ? 'kg' : 'scoops');
 const fmtQty = (n, c) => `${Number(n).toFixed(n % 1 ? 1 : 0)} ${qtyLabel(c)}`;
 
@@ -54,10 +81,27 @@ export async function feedOrderView() {
 async function orderTab(horses, feedItems, catalog) {
   if (!horses.length) return empty('Add a horse first, then come back to set up feeding.');
   if (!catalog.length) return empty('No feeds in the catalog yet.', addBtn('feedcatalog', 'Add a feed', {}, 'primary'));
+
+  const validIds = new Set(catalog.map((c) => c.id));
+  const colIds = await resolveColumns(validIds, feedItems);
+  const cols = colIds.map((id) => catalog.find((c) => c.id === id)).filter(Boolean);
+  const available = catalog.filter((c) => !colIds.includes(c.id));
+
+  const picker = html`<div class="row" style="margin:10px 0">
+    ${available.length ? html`<select data-action-change="fo-add-col" style="width:auto">
+      <option value="">＋ Add a feed to this sheet…</option>
+      ${available.map((c) => html`<option value="${c.id}">${c.name}${c.brand ? ' – ' + c.brand : ''}</option>`)}
+    </select>` : html`<span class="small muted">All catalog feeds are on this sheet.</span>`}
+  </div>`;
+
+  if (!cols.length) {
+    return html`${picker}${empty('No feeds on this order sheet yet. Choose one above to start – some yards only need one.')}`;
+  }
+
   const sortedHorses = sortBy(horses, (h) => h.name.toLowerCase());
-  const totals = Object.fromEntries(catalog.map((c) => [c.id, computeCatalogTotals(c, feedItems)]));
-  const grandCostMonth = sum(catalog, (c) => totals[c.id].costPerMonth);
-  const grandCostWeek = sum(catalog, (c) => totals[c.id].costPerWeek);
+  const totals = Object.fromEntries(cols.map((c) => [c.id, computeCatalogTotals(c, feedItems)]));
+  const grandCostMonth = sum(cols, (c) => totals[c.id].costPerMonth);
+  const grandCostWeek = sum(cols, (c) => totals[c.id].costPerWeek);
 
   const cell = (h, c) => {
     const item = feedItems.find((f) => f.horseId === h.id && f.feedId === c.id && f.active !== false);
@@ -66,22 +110,25 @@ async function orderTab(horses, feedItems, catalog) {
     }
     return addBtn('feed', '', { horseId: h.id, feedId: c.id, kind: 'Hard feed', name: c.name }, 'sm ghost');
   };
+  const colHead = (c) => html`<th>${c.name}${c.brand ? html`<div class="small muted">${c.brand}</div>` : ''}
+    <button type="button" class="icon sm" data-action="fo-remove-col" data-id="${c.id}" title="Remove from this sheet" aria-label="Remove ${c.name}">✕</button></th>`;
 
   return html`
-    <p class="small muted" style="margin-top:8px">Tap a cell to edit that horse's daily amount, or ＋ to add it. Totals update automatically from the Feed catalog setup (scoop/bag size, measure, price).</p>
+    ${picker}
+    <p class="small muted">Tap a cell to edit that horse's daily amount, or ＋ to add it. Totals update automatically from the Feed catalog setup (scoop/bag size, measure, price).</p>
     <div class="table-wrap">
       <table class="feedorder">
-        <thead><tr><th>Horse</th>${catalog.map((c) => html`<th>${c.name}${c.brand ? html`<div class="small muted">${c.brand}</div>` : ''}</th>`)}</tr></thead>
+        <thead><tr><th>Horse</th>${cols.map(colHead)}</tr></thead>
         <tbody>
-          ${sortedHorses.map((h) => html`<tr><td><strong>${h.name}</strong></td>${catalog.map((c) => html`<td>${cell(h, c)}</td>`)}</tr>`)}
-          <tr class="total-row"><th>Total ${qtyLabel(catalog[0])}/day</th>${catalog.map((c) => html`<td>${totals[c.id].totalQty ? fmtQty(totals[c.id].totalQty, c) : '–'}</td>`)}</tr>
-          <tr class="total-row"><th>Total weight (kg/day)</th>${catalog.map((c) => html`<td>${totals[c.id].kgDay ? totals[c.id].kgDay.toFixed(2) : '–'}</td>`)}</tr>
-          <tr><th>Bags / week</th>${catalog.map((c) => html`<td>${totals[c.id].bagsPerWeek ? totals[c.id].bagsPerWeek.toFixed(1) : '–'}</td>`)}</tr>
-          <tr><th>Bags / 2 weeks</th>${catalog.map((c) => html`<td>${totals[c.id].bagsPer2Weeks ? totals[c.id].bagsPer2Weeks.toFixed(1) : '–'}</td>`)}</tr>
-          <tr><th>Bags / month</th>${catalog.map((c) => html`<td>${totals[c.id].bagsPerMonth ? totals[c.id].bagsPerMonth.toFixed(1) : '–'}</td>`)}</tr>
-          <tr><th>Bags to order now <span class="small muted">(rounds up)</span></th>${catalog.map((c) => html`<td><strong>${totals[c.id].bagsPer2Weeks ? Math.ceil(totals[c.id].bagsPer2Weeks) : '–'}</strong><span class="small muted"> /2wk</span></td>`)}</tr>
-          <tr class="total-row"><th>Cost / week</th>${catalog.map((c) => html`<td>${totals[c.id].costPerWeek ? money(totals[c.id].costPerWeek) : '–'}</td>`)}</tr>
-          <tr class="total-row"><th>Cost / month</th>${catalog.map((c) => html`<td>${totals[c.id].costPerMonth ? money(totals[c.id].costPerMonth) : '–'}</td>`)}</tr>
+          ${sortedHorses.map((h) => html`<tr><td><strong>${h.name}</strong></td>${cols.map((c) => html`<td>${cell(h, c)}</td>`)}</tr>`)}
+          <tr class="total-row"><th>Total qty/day</th>${cols.map((c) => html`<td>${totals[c.id].totalQty ? fmtQty(totals[c.id].totalQty, c) : '–'}</td>`)}</tr>
+          <tr class="total-row"><th>Total weight (kg/day)</th>${cols.map((c) => html`<td>${totals[c.id].kgDay ? totals[c.id].kgDay.toFixed(2) : '–'}</td>`)}</tr>
+          <tr><th>Bags / week</th>${cols.map((c) => html`<td>${totals[c.id].bagsPerWeek ? totals[c.id].bagsPerWeek.toFixed(1) : '–'}</td>`)}</tr>
+          <tr><th>Bags / 2 weeks</th>${cols.map((c) => html`<td>${totals[c.id].bagsPer2Weeks ? totals[c.id].bagsPer2Weeks.toFixed(1) : '–'}</td>`)}</tr>
+          <tr><th>Bags / month</th>${cols.map((c) => html`<td>${totals[c.id].bagsPerMonth ? totals[c.id].bagsPerMonth.toFixed(1) : '–'}</td>`)}</tr>
+          <tr><th>Bags to order now <span class="small muted">(rounds up)</span></th>${cols.map((c) => html`<td><strong>${totals[c.id].bagsPer2Weeks ? Math.ceil(totals[c.id].bagsPer2Weeks) : '–'}</strong><span class="small muted"> /2wk</span></td>`)}</tr>
+          <tr class="total-row"><th>Cost / week</th>${cols.map((c) => html`<td>${totals[c.id].costPerWeek ? money(totals[c.id].costPerWeek) : '–'}</td>`)}</tr>
+          <tr class="total-row"><th>Cost / month</th>${cols.map((c) => html`<td>${totals[c.id].costPerMonth ? money(totals[c.id].costPerMonth) : '–'}</td>`)}</tr>
         </tbody>
       </table>
     </div>
@@ -107,23 +154,26 @@ function catalogTab(catalog) {
 
 export async function feedOrderCsv() {
   const [horses, feedItems, catalogAll] = await Promise.all([db.all('horses'), db.all('feed'), db.all('feedcatalog')]);
-  const catalog = sortBy(catalogAll.filter((c) => c.active !== false), (c) => (c.name || '').toLowerCase());
+  const catalogAllActive = catalogAll.filter((c) => c.active !== false);
+  const validIds = new Set(catalogAllActive.map((c) => c.id));
+  const colIds = await resolveColumns(validIds, feedItems);
+  const cols = colIds.map((id) => catalogAllActive.find((c) => c.id === id)).filter(Boolean);
   const sortedHorses = sortBy(horses, (h) => h.name.toLowerCase());
   const q = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`;
-  const rows = [['Horse', ...catalog.map((c) => c.name)]];
+  const rows = [['Horse', ...cols.map((c) => c.name)]];
   for (const h of sortedHorses) {
-    rows.push([h.name, ...catalog.map((c) => {
+    rows.push([h.name, ...cols.map((c) => {
       const item = feedItems.find((f) => f.horseId === h.id && f.feedId === c.id && f.active !== false);
       return item?.dailyQty ?? '';
     })]);
   }
-  const totals = Object.fromEntries(catalog.map((c) => [c.id, computeCatalogTotals(c, feedItems)]));
-  rows.push([`Total ${qtyLabel(catalog[0] || {})}/day`, ...catalog.map((c) => totals[c.id].totalQty || '')]);
-  rows.push(['Total weight (kg/day)', ...catalog.map((c) => totals[c.id].kgDay.toFixed(2))]);
-  rows.push(['Bags / week', ...catalog.map((c) => totals[c.id].bagsPerWeek.toFixed(1))]);
-  rows.push(['Bags / 2 weeks', ...catalog.map((c) => totals[c.id].bagsPer2Weeks.toFixed(1))]);
-  rows.push(['Bags / month', ...catalog.map((c) => totals[c.id].bagsPerMonth.toFixed(1))]);
-  rows.push(['Cost / week', ...catalog.map((c) => totals[c.id].costPerWeek.toFixed(2))]);
-  rows.push(['Cost / month', ...catalog.map((c) => totals[c.id].costPerMonth.toFixed(2))]);
+  const totals = Object.fromEntries(cols.map((c) => [c.id, computeCatalogTotals(c, feedItems)]));
+  rows.push(['Total qty/day', ...cols.map((c) => totals[c.id].totalQty || '')]);
+  rows.push(['Total weight (kg/day)', ...cols.map((c) => totals[c.id].kgDay.toFixed(2))]);
+  rows.push(['Bags / week', ...cols.map((c) => totals[c.id].bagsPerWeek.toFixed(1))]);
+  rows.push(['Bags / 2 weeks', ...cols.map((c) => totals[c.id].bagsPer2Weeks.toFixed(1))]);
+  rows.push(['Bags / month', ...cols.map((c) => totals[c.id].bagsPerMonth.toFixed(1))]);
+  rows.push(['Cost / week', ...cols.map((c) => totals[c.id].costPerWeek.toFixed(2))]);
+  rows.push(['Cost / month', ...cols.map((c) => totals[c.id].costPerMonth.toFixed(2))]);
   return rows.map((r) => r.map(q).join(',')).join('\n');
 }

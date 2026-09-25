@@ -9,7 +9,7 @@ import { homeView } from './views/home.js';
 import { horsesView, horseView, setFilter } from './views/horses.js';
 import { remindersView, expensesView, eventsView, providersView, moreView, setListState, expensesCsv } from './views/lists.js';
 import { printView, feedboardView, togglePrint } from './views/print.js';
-import { feedOrderView, feedOrderCsv, setFeedOrderTab } from './views/feedorder.js';
+import { feedOrderView, feedOrderCsv, setFeedOrderTab, addFeedOrderColumn, removeFeedOrderColumn } from './views/feedorder.js';
 import { seedFeedCatalogIfEmpty } from './feedseed.js';
 import { blogView, postView, postPublishJson } from './views/blog.js';
 import { aiView, sendQuestion, setAiHorse, clearAi, buildContext, aiSelected } from './views/ai.js';
@@ -144,6 +144,7 @@ const actions = {
   'export-csv': async () => download(`${APP.name.toLowerCase()}-expenses-${today()}.csv`, await expensesCsv(), 'text/csv'),
   'fo-tab': (el) => { setFeedOrderTab(el.dataset.v); render(); },
   'fo-csv': async () => download(`${APP.name.toLowerCase()}-feed-order-${today()}.csv`, await feedOrderCsv(), 'text/csv'),
+  'fo-remove-col': async (el) => { await removeFeedOrderColumn(el.dataset.id); render(); },
   print: () => window.print(),
   'toggle-print': (el) => { togglePrint(el.dataset.k); render(); },
   'share-horse': async (el) => {
@@ -176,6 +177,7 @@ const actions = {
 const changeActions = {
   'list-state': (el) => { setListState(el.dataset.k, el.value); render(); },
   'ai-horse': (el) => { setAiHorse(el.value); render(); },
+  'fo-add-col': async (el) => { await addFeedOrderColumn(el.value); render(); },
   'set-currency': async (el) => { await db.setSetting('currency', el.value); setCurrency(el.value); toast('Currency updated'); },
   'set-theme': async (el) => { await db.setSetting('theme', el.value); applyTheme(el.value); },
   restore: async (el) => {
