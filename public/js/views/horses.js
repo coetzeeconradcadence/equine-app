@@ -162,6 +162,7 @@ function trainingTab(d) {
   const history = sortBy(d.training.filter((t) => !(t.status === 'Planned' && t.date >= today())), (t) => t.date, -1).slice(0, 60);
   const weeks = groupBy(history, (t) => weekStart(t.date));
   const types = groupBy(last28, (t) => t.type);
+  const withHr = sortBy(done.filter((t) => t.hasWearable && t.avgHr), (t) => t.date).slice(-10);
   return html`
     <div class="row between"><h2 style="margin:0">Training</h2>
       <div class="row">${addBtn('training', 'Log ride', { horseId: d.horse.id }, 'primary sm')}${addBtn('training', 'Plan', { horseId: d.horse.id, status: 'Planned', date: addDays(today(), 1) })}</div></div>
@@ -171,6 +172,11 @@ function trainingTab(d) {
       <div class="stat"><div class="label">Last 4 weeks</div><div class="value">${last28.length}</div></div>
       <div class="stat"><div class="label">Mix (4 wks)</div><div class="small">${Object.entries(types).map(([k, v]) => `${k} ${v.length}`).join(', ') || '—'}</div></div>
     </div>
+    ${withHr.length >= 2 ? html`<div class="card flat" style="margin-top:12px">
+      <div class="row between"><strong>❤️ Avg heart rate (last ${withHr.length} logged rides)</strong><span class="small muted">${withHr[0].device || ''}</span></div>
+      ${sparkline(withHr.map((t) => t.avgHr))}
+      <p class="small muted" style="margin-top:4px">A downward trend at similar effort over weeks can be a sign of improving fitness – not medical advice, just a nudge to compare with your vet or trainer.</p>
+    </div>` : ''}
     ${planned.length ? html`<div class="section"><h2>Planned</h2></div><div class="list">${planned.map(trainingItem)}</div>` : ''}
     <div class="section"><h2>History</h2></div>
     ${history.length ? Object.entries(weeks).map(([w, items]) => html`

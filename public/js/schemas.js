@@ -44,6 +44,8 @@ export const DOC_CATEGORIES = ['Passport', 'Registration', 'Vaccination record',
 export const SEXES = ['Mare', 'Gelding', 'Stallion', 'Colt', 'Filly'];
 export const FEED_KINDS = ['Hard feed', 'Roughage', 'Supplement', 'Medication', 'Other'];
 export const FEED_TIMES = ['Morning', 'Midday', 'Evening', 'Night'];
+// Manual entry for now – see README for why (no public API for Garmin Blaze or similar devices yet).
+export const WEARABLE_DEVICES = ['Garmin Blaze', 'Polar Equine', 'Arioneo Equimetre', 'Hylete / other GPS tracker', 'Other'];
 
 const isResult = (v) => v.status === 'Completed';
 const disc = (...d) => (v) => isResult(v) && d.includes(v.discipline);
@@ -120,6 +122,13 @@ export const SCHEMAS = {
       { k: 'intensity', label: 'Intensity', type: 'select', options: ['Easy', 'Moderate', 'Hard'], default: 'Moderate' },
       { k: 'rider', label: 'Rider', type: 'text' },
       { k: 'feel', label: 'How did it go?', type: 'select', options: ['😀 Great', '🙂 Good', '😐 OK', '😕 Tough'] },
+      { k: 'hasWearable', label: 'Log heart rate / GPS data from a device (Garmin Blaze, Polar Equine, etc.)', type: 'checkbox', full: true },
+      { k: 'device', label: 'Device', type: 'select', options: WEARABLE_DEVICES, showIf: (v) => v.hasWearable },
+      { k: 'avgHr', label: 'Avg heart rate (bpm)', type: 'number', showIf: (v) => v.hasWearable },
+      { k: 'maxHr', label: 'Max heart rate (bpm)', type: 'number', showIf: (v) => v.hasWearable },
+      { k: 'recoveryHr', label: 'Recovery HR (bpm, ~1 min after stopping)', type: 'number', showIf: (v) => v.hasWearable },
+      { k: 'distanceKm', label: 'Distance (km)', type: 'number', step: '0.1', showIf: (v) => v.hasWearable },
+      { k: 'heatScore', label: 'Heat Score / heat stress reading', type: 'text', showIf: (v) => v.hasWearable, hint: 'As shown in the device app, e.g. "Low", "Moderate", or a number.' },
       { k: 'notes', label: 'Exercises & notes', type: 'textarea', full: true },
     ],
   },

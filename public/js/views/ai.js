@@ -35,7 +35,7 @@ export async function buildContext(horseId) {
   const recentTraining = sortBy(training.filter((x) => x.date >= addDays(today(), -42)), (x) => x.date, -1);
   if (recentTraining.length) {
     L.push('TRAINING LAST 6 WEEKS:');
-    for (const x of recentTraining.slice(0, 30)) L.push(`- ${x.date} ${x.status} ${x.type} ${x.duration || ''}min ${x.intensity || ''} ${x.feel || ''}${x.notes ? ' – ' + x.notes : ''}`);
+    for (const x of recentTraining.slice(0, 30)) L.push(`- ${x.date} ${x.status} ${x.type} ${x.duration || ''}min ${x.intensity || ''} ${x.feel || ''}${x.hasWearable ? ` [${x.device || 'device'}: avg HR ${x.avgHr || '?'}, max ${x.maxHr || '?'}, recovery ${x.recoveryHr || '?'} bpm${x.distanceKm ? ', ' + x.distanceKm + 'km' : ''}${x.heatScore ? ', heat ' + x.heatScore : ''}]` : ''}${x.notes ? ' – ' + x.notes : ''}`);
   }
   if (events.length) {
     L.push('SHOWS & RESULTS:');

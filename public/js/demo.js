@@ -49,7 +49,12 @@ export async function loadDemo() {
   const types = ['Flatwork', 'Jumping', 'Pole work', 'Hack / outride', 'Lesson', 'Rest day'];
   for (let i = 1; i <= 24; i++) {
     const ty = types[i % types.length];
-    await db.put('training', { horseId: biscuit.id, date: d(-i * 1.5 | 0), type: ty, status: 'Done', duration: ty === 'Rest day' ? 0 : 40 + (i % 3) * 10, intensity: ['Easy', 'Moderate', 'Hard'][i % 3], feel: ['😀 Great', '🙂 Good', '😐 OK'][i % 3], rider: 'Me' });
+    const wearable = ty !== 'Rest day' && i % 3 === 0; // roughly every 3rd real ride has device data
+    await db.put('training', {
+      horseId: biscuit.id, date: d(-i * 1.5 | 0), type: ty, status: 'Done', duration: ty === 'Rest day' ? 0 : 40 + (i % 3) * 10,
+      intensity: ['Easy', 'Moderate', 'Hard'][i % 3], feel: ['😀 Great', '🙂 Good', '😐 OK'][i % 3], rider: 'Me',
+      ...(wearable ? { hasWearable: true, device: 'Garmin Blaze', avgHr: 118 - Math.floor(i / 4), maxHr: 162 - Math.floor(i / 6), recoveryHr: 88 - Math.floor(i / 5), distanceKm: 4 + (i % 4), heatScore: ['Low', 'Low', 'Moderate'][i % 3] } : {}),
+    });
   }
   for (let i = 1; i <= 14; i++) await db.put('training', { horseId: luna.id, date: d(-i * 2), type: ['Dressage', 'Flatwork', 'Lunging', 'Lesson'][i % 4], status: 'Done', duration: 45, intensity: 'Moderate' });
   await db.put('training', { horseId: biscuit.id, date: d(2), type: 'Lesson', status: 'Planned', duration: 45, notes: 'Grid work with Jess' });

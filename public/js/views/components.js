@@ -104,6 +104,7 @@ export function trainingItem(t) {
       <div class="grow">
         <div class="title">${t.type} ${t.feel ? html`<span class="small">${t.feel}</span>` : ''}</div>
         <div class="meta">${fmtDate(t.date, { weekday: 'short', day: 'numeric', month: 'short' })}${t.duration ? ' · ' + t.duration + ' min' : ''}${t.intensity ? ' · ' + t.intensity : ''}${t.rider ? ' · ' + t.rider : ''}</div>
+        ${t.hasWearable ? html`<div class="meta">❤️ ${[t.avgHr ? 'avg ' + t.avgHr : '', t.maxHr ? 'max ' + t.maxHr : '', t.recoveryHr ? 'recovery ' + t.recoveryHr : ''].filter(Boolean).join(' · ')}${t.avgHr || t.maxHr ? ' bpm' : ''}${t.distanceKm ? ' · ' + t.distanceKm + ' km' : ''}${t.heatScore ? ' · Heat: ' + t.heatScore : ''}${t.device ? ' (' + t.device + ')' : ''}</div>` : ''}
         ${t.notes ? html`<div class="meta">${t.notes}</div>` : ''}
       </div>
       ${pill(t.status, tone)}
