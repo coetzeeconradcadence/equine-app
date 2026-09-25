@@ -254,13 +254,24 @@ td.num, th.num { text-align: right; }
 .btn.ghost, button.ghost { background: transparent; border-style: dashed; color: var(--ink-2); }
 .linklike { background: none; border: 0; padding: 0; min-height: auto; color: var(--primary); font-weight: 600; text-decoration: underline; display: inline; }
 
+/* Help page: native <details> disclosure rows styled to match .item/.list */
+.help-item { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 4px 12px; }
+.help-item + .help-item { margin-top: 0; }
+.help-item summary { cursor: pointer; list-style: none; padding: 10px 4px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.help-item summary::-webkit-details-marker { display: none; }
+.help-item summary::after { content: '›'; margin-left: auto; color: var(--muted); transform: rotate(90deg); transition: transform .15s ease; }
+.help-item[open] summary::after { transform: rotate(-90deg); }
+.help-item p { margin: 0 0 12px; padding-left: 30px; color: var(--muted); font-size: .92rem; line-height: 1.4; }
+.help-item.indent summary { padding-left: 20px; font-weight: 500; font-size: .95rem; }
+.help-item.indent p { padding-left: 46px; }
+
 /* Welcome / splash screen: full-bleed hero photo + dark scrim + minimal type, like a premium
    app's landing screen. Placeholder photo (free-to-use stock) – swap public/index.html's
    .welcome-bg src for commissioned artwork or real photography later; nothing else changes. */
 .welcome {
   position: fixed; inset: 0; z-index: 999; overflow: hidden;
   display: flex; flex-direction: column; justify-content: flex-end;
-  background: #0a100c; transition: opacity .5s ease, visibility .5s ease;
+  background: #c9b98c; transition: opacity .5s ease, visibility .5s ease;
 }
 .welcome.hide { opacity: 0; visibility: hidden; pointer-events: none; }
 .welcome-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 78%; }
@@ -272,7 +283,7 @@ td.num, th.num { text-align: right; }
 }
 .welcome-scrim {
   position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(8, 14, 10, .1) 0%, rgba(8, 14, 10, .22) 38%, rgba(7, 12, 9, .82) 76%, #070c09 100%);
+  background: linear-gradient(180deg, rgba(120, 107, 72, .10) 0%, rgba(120, 107, 72, .30) 38%, rgba(94, 83, 52, .86) 76%, #524a2c 100%);
 }
 .welcome-logo {
   position: absolute; z-index: 2; top: calc(18px + env(safe-area-inset-top)); right: 18px;
@@ -281,7 +292,7 @@ td.num, th.num { text-align: right; }
 .welcome-content { position: relative; z-index: 2; padding: 0 24px calc(30px + env(safe-area-inset-bottom)); animation: welcome-rise .7s ease .1s both; }
 .welcome-eyebrow { color: #e8c9a0; font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; margin-bottom: 10px; }
 .welcome-content h1 { font-size: 2.3rem; line-height: 1.08; margin: 0 0 10px; color: #fff; font-weight: 800; letter-spacing: -.01em; }
-.welcome-tag { color: #d7e0d9; font-size: .92rem; margin: 0 0 20px; max-width: 34ch; }
+.welcome-tag { color: #ede3cd; font-size: .92rem; margin: 0 0 20px; max-width: 34ch; }
 .welcome-content .primary.block { width: 100%; max-width: 420px; font-size: 1rem; padding: 14px; border-radius: 12px; }
 @keyframes welcome-rise { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .welcome-content { animation: none !important; } }

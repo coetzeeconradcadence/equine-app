@@ -1,10 +1,10 @@
 // Network-first service worker: always fresh when online, still opens offline.
-const CACHE = 'hoofnote-v2';
+const CACHE = 'hoofnote-v3';
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'icons/icon.svg',
   'js/app.js', 'js/config.js', 'js/util.js', 'js/db.js', 'js/forms.js', 'js/schemas.js', 'js/ahs.js', 'js/due.js', 'js/demo.js', 'js/feedseed.js',
   'js/views/components.js', 'js/views/home.js', 'js/views/horses.js', 'js/views/lists.js', 'js/views/print.js',
-  'js/views/blog.js', 'js/views/ai.js', 'js/views/settings.js', 'js/views/feedorder.js', 'js/views/calendar.js',
+  'js/views/blog.js', 'js/views/ai.js', 'js/views/settings.js', 'js/views/feedorder.js', 'js/views/calendar.js', 'js/views/help.js',
 ];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

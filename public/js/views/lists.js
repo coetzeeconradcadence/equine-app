@@ -129,6 +129,7 @@ export function moreView() {
       ${link('#/ai', '✨', 'Ask AI', 'Questions answered using your horse’s records')}
       ${link('#/blog', '📰', 'Blog & videos', 'Tips, training videos and stories')}
       ${actionItem('replay-welcome', '🐴', 'Welcome screen', 'See the app intro again')}
+      ${link('#/help', '❓', 'Help', 'What every part of the app does')}
       ${link('#/settings', '⚙️', 'Settings & backup', 'Export, import, currency, demo data')}
     </div>`;
 }

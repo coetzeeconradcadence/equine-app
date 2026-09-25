@@ -22,8 +22,15 @@ export async function horsesView() {
 }
 
 const TABS = [
-  ['overview', 'Overview'], ['health', 'Health'], ['farrier', 'Farrier'], ['feeding', 'Feeding'], ['training', 'Training'],
-  ['shows', 'Shows & results'], ['costs', 'Costs'], ['docs', 'Documents'], ['timeline', 'Timeline'],
+  ['overview', 'Overview', 'Key facts, AHS travel-ready badge and quick links'],
+  ['health', 'Health', 'Vaccinations, vet visits, deworming and treatments'],
+  ['farrier', 'Farrier', 'Trim/shoeing history, hoof type and size, next visit due'],
+  ['feeding', 'Feeding', 'What and how much this horse eats'],
+  ['training', 'Training', 'Rides and sessions logged, with optional GPS/heart-rate data'],
+  ['shows', 'Shows & results', 'Entries, results and the AHS travel checklist'],
+  ['costs', 'Costs', "This horse's own share of your expenses"],
+  ['docs', 'Documents', 'Passport, certificates and insurance, with expiry reminders'],
+  ['timeline', 'Timeline', "Everything that's happened to this horse, in order"],
 ];
 const filters = { health: 'All', shows: 'All' };
 
@@ -50,7 +57,7 @@ export async function horseView(id, tab = 'overview') {
       <button class="sm" data-action="edit" data-schema="horse" data-id="${id}">Edit</button>
     </div>
     ${horse.alerts ? html`<div class="callout bad" style="margin-top:12px">⚠️ <strong>Alerts:</strong> ${horse.alerts}</div>` : ''}
-    <nav class="tabs">${TABS.map(([k, label]) => html`<a class="tab ${k === tab ? 'active' : ''}" href="#/horse/${id}/${k}">${label}</a>`)}</nav>
+    <nav class="tabs">${TABS.map(([k, label, desc]) => html`<a class="tab ${k === tab ? 'active' : ''}" href="#/horse/${id}/${k}" title="${desc}">${label}</a>`)}</nav>
     ${body}`;
 }
 

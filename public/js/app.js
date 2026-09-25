@@ -11,6 +11,7 @@ import { remindersView, expensesView, eventsView, providersView, moreView, setLi
 import { printView, feedboardView, togglePrint } from './views/print.js';
 import { feedOrderView, feedOrderCsv, setFeedOrderTab, addFeedOrderColumn, removeFeedOrderColumn } from './views/feedorder.js';
 import { calendarView, setCalMonth, calendarDayBody } from './views/calendar.js';
+import { helpView } from './views/help.js';
 import { seedFeedCatalogIfEmpty } from './feedseed.js';
 import { blogView, postView, postPublishJson } from './views/blog.js';
 import { aiView, sendQuestion, setAiHorse, clearAi, buildContext, aiSelected } from './views/ai.js';
@@ -62,6 +63,7 @@ async function route() {
     case 'feedboard': return ['more', await feedboardView()];
     case 'feedorder': return ['more', await feedOrderView()];
     case 'calendar': return ['more', await calendarView()];
+    case 'help': return ['more', helpView()];
     case 'blog': return ['more', b === 'draft' ? await postView(c, true) : b ? await postView(b) : await blogView()];
     case 'ai': return ['more', await aiView(params)];
     case 'settings': return ['more', await settingsView()];
@@ -103,7 +105,7 @@ function renderFab(nav) {
   if (hide) { fab && fab.remove(); return; }
   if (!fab) {
     fab = document.createElement('button');
-    fab.id = 'fab'; fab.className = 'fab'; fab.setAttribute('aria-label', 'Quick add'); fab.textContent = '＋';
+    fab.id = 'fab'; fab.className = 'fab'; fab.setAttribute('aria-label', 'Quick add'); fab.title = 'Quick add'; fab.textContent = '＋';
     document.body.appendChild(fab);
     fab.onclick = quickAdd;
   }
