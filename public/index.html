@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en-ZA">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Hoofnote</title>
+  <meta name="description" content="Your horse's records, reminders, costs and results in one place." />
+  <meta name="theme-color" content="#2f4a3a" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a href="#/" class="brand" aria-label="Home">
+      <img src="icons/icon.svg" alt="" width="28" height="28" />
+      <span id="app-name">Hoofnote</span>
+      <span class="badge-dev">beta</span>
+    </a>
+    <nav class="top-links">
+      <a href="#/blog">Blog</a>
+      <a href="#/ai">Ask AI</a>
+      <a href="#/settings" aria-label="Settings">⚙︎</a>
+    </nav>
+  </header>
+
+  <div id="storage-banner" class="banner warn" hidden>
+    This browser is blocking storage, so changes will be lost when you close the page. Try a normal (non-private) window.
+  </div>
+
+  <main id="view" tabindex="-1"></main>
+
+  <nav class="bottomnav" aria-label="Main">
+    <a href="#/" data-nav="home"><span>🏠</span>Home</a>
+    <a href="#/horses" data-nav="horses"><span>🐴</span>Horses</a>
+    <a href="#/reminders" data-nav="reminders"><span>🔔</span>Due</a>
+    <a href="#/expenses" data-nav="expenses"><span>💰</span>Costs</a>
+    <a href="#/more" data-nav="more"><span>☰</span>More</a>
+  </nav>
+
+  <dialog id="sheet" class="sheet"></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
