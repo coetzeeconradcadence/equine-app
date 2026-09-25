@@ -21,7 +21,9 @@ document.title = APP.name;
 $('#app-name').textContent = APP.name;
 
 // ---------------- Welcome / splash screen ----------------
-const WELCOME_KEY = 'hoofnote-welcome-seen';
+// Versioned so a redesign (like this one) shows again even for browsers that dismissed an
+// earlier version – bump the suffix whenever the welcome screen changes meaningfully.
+const WELCOME_KEY = 'hoofnote-welcome-seen-v2';
 (function initWelcome() {
   const el = document.getElementById('welcome');
   if (!el) return;
