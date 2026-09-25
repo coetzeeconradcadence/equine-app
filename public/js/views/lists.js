@@ -122,6 +122,7 @@ export function moreView() {
       ${link('#/events', '🏆', 'Shows & events', 'Entries, results and AHS travel checks')}
       ${link('#/providers', '📇', 'Contacts', 'Vet, farrier, dentist, coach, transport')}
       ${link('#/feedboard', '🌾', 'Yard feed board', 'Printable feed chart for all horses')}
+      ${link('#/feedorder', '🧮', 'Feed order & catalog', 'Scoops, bags and cost per horse, worked out for you')}
       ${link('#/ai', '✨', 'Ask AI', 'Questions answered using your horse’s records')}
       ${link('#/blog', '📰', 'Blog & videos', 'Tips, training videos and stories')}
       ${link('#/settings', '⚙️', 'Settings & backup', 'Export, import, currency, demo data')}

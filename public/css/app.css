@@ -234,3 +234,10 @@ td.num, th.num { text-align: right; }
 }
 .feedboard td, .feedboard th { border: 1px solid var(--line); padding: 8px; }
 .feedboard th { background: var(--surface-2); }
+
+/* Feed order grid */
+.feedorder td, .feedorder th { border: 1px solid var(--line); padding: 8px; white-space: nowrap; }
+.feedorder th { background: var(--surface-2); }
+.feedorder .total-row td, .feedorder .total-row th { background: var(--surface-2); font-weight: 600; }
+.btn.ghost, button.ghost { background: transparent; border-style: dashed; color: var(--ink-2); }
+.linklike { background: none; border: 0; padding: 0; min-height: auto; color: var(--primary); font-weight: 600; text-decoration: underline; display: inline; }

@@ -46,10 +46,18 @@ function fieldHtml(f, v, ctx) {
       if (!ctx.providers.length) input += '<span class="hint">Add your vet, farrier etc. under More → Contacts.</span>';
       break;
     }
+    case 'feedcatalog': {
+      const opts = ctx.feedCatalog.map((c) => `<option value="${c.id}" ${c.id === val ? 'selected' : ''}>${esc(c.name)}${c.brand ? ' – ' + esc(c.brand) : ''}</option>`).join('');
+      input = `<select ${common}><option value="">${esc(f.allowNone || '— none —')}</option>${opts}</select>`;
+      if (!ctx.feedCatalog.length) input += '<span class="hint">Add feeds under More → Feed catalog.</span>';
+      break;
+    }
     case 'multi':
       input = `<div class="checks">${f.options.map((o) => `<label><input type="checkbox" name="${f.k}" value="${esc(o)}" ${(val || []).includes(o) ? 'checked' : ''}> ${esc(o)}</label>`).join('')}</div>`; break;
-    case 'checkbox':
-      return `<div class="field ${f.full ? 'full' : ''}" data-field="${f.k}"><div class="checks"><label><input type="checkbox" ${common} ${val ? 'checked' : ''}> ${esc(f.label)}</label></div>${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</div>`;
+    case 'checkbox': {
+      const hintVal = typeof f.hint === 'function' ? f.hint(v, ctx) : f.hint;
+      return `<div class="field ${f.full ? 'full' : ''}" data-field="${f.k}"><div class="checks"><label><input type="checkbox" ${common} ${val ? 'checked' : ''}> ${esc(f.label)}</label></div>${f.hint ? `<span class="hint" data-hint="${f.k}">${esc(hintVal)}</span>` : ''}</div>`;
+    }
     case 'photo':
       input = `<div class="row"><img class="photo-preview" data-preview="${f.k}" ${val ? `src="${val}"` : 'hidden'} alt="">
         <label class="btn sm">📷 ${val ? 'Change' : 'Add photo'}<input type="file" accept="image/*" data-photo="${f.k}" hidden></label>
@@ -58,9 +66,13 @@ function fieldHtml(f, v, ctx) {
       input = `<div class="row"><span class="small muted" data-filename="${f.k}">${val ? esc(val.name) : 'No file chosen'}</span>
         <label class="btn sm">📎 Choose file<input type="file" accept="${f.accept || '*/*'}" data-file="${f.k}" hidden></label></div>`; break;
     case 'money':
-      input = `<input ${common} type="number" inputmode="decimal" step="0.01" min="0" value="${esc(val)}" placeholder="${getCurrency()}">`; break;
+      input = `<input ${common} type="number" inputmode="decimal" step="0.01" min="0" value="${esc(val)}" placeholder="${getCurrency()}" ${f.list ? `list="dl_${f.k}"` : ''}>`;
+      if (f.list) input += `<datalist id="dl_${f.k}">${f.list.map((o) => `<option value="${esc(o)}">`).join('')}</datalist>`;
+      break;
     case 'number':
-      input = `<input ${common} type="number" inputmode="decimal" step="${f.step || 'any'}" value="${esc(val)}" placeholder="${esc(f.placeholder || '')}">`; break;
+      input = `<input ${common} type="number" inputmode="decimal" step="${f.step || 'any'}" value="${esc(val)}" placeholder="${esc(f.placeholder || '')}" ${f.list ? `list="dl_${f.k}"` : ''}>`;
+      if (f.list) input += `<datalist id="dl_${f.k}">${f.list.map((o) => `<option value="${esc(o)}">`).join('')}</datalist>`;
+      break;
     default: {
       const type = ['date', 'url', 'tel', 'email'].includes(f.type) ? f.type : 'text';
       const list = f.list ? `list="dl_${f.k}"` : '';
@@ -68,9 +80,10 @@ function fieldHtml(f, v, ctx) {
       if (f.list) input += `<datalist id="dl_${f.k}">${f.list.map((o) => `<option value="${esc(o)}">`).join('')}</datalist>`;
     }
   }
+  const hintVal = typeof f.hint === 'function' ? f.hint(v, ctx) : f.hint;
   return `<div class="field ${f.full ? 'full' : ''}" data-field="${f.k}">
     <label for="${id}">${esc(f.label)}${f.req ? ' *' : ''}</label>${input}
-    ${f.hint && f.type !== 'checkbox' ? `<span class="hint">${esc(f.hint)}</span>` : ''}</div>`;
+    ${f.hint && f.type !== 'checkbox' ? `<span class="hint" data-hint="${f.k}">${esc(hintVal)}</span>` : ''}</div>`;
 }
 
 function readValues(form, schema, blobs) {
@@ -93,8 +106,12 @@ function readValues(form, schema, blobs) {
 export async function openForm(key, record = null, preset = {}) {
   const schema = SCHEMAS[key];
   const isNew = !record || !record.id;
-  const [horses, providers] = await Promise.all([db.all('horses'), db.all('providers')]);
-  const ctx = { horses: sortBy(horses, (h) => h.name.toLowerCase()), providers: sortBy(providers, (p) => p.name.toLowerCase()) };
+  const [horses, providers, feedCatalog] = await Promise.all([db.all('horses'), db.all('providers'), db.all('feedcatalog')]);
+  const ctx = {
+    horses: sortBy(horses, (h) => h.name.toLowerCase()),
+    providers: sortBy(providers, (p) => p.name.toLowerCase()),
+    feedCatalog: sortBy(feedCatalog, (c) => (c.name || '').toLowerCase()),
+  };
 
   const v = {};
   for (const f of schema.fields) {
@@ -131,6 +148,10 @@ export async function openForm(key, record = null, preset = {}) {
       if (f.suggest && !touched.has(f.k) && changedKey !== f.k) {
         const s = f.suggest(cur);
         if (form.elements[f.k]) form.elements[f.k].value = s || '';
+      }
+      if (typeof f.hint === 'function') {
+        const hintEl = form.querySelector(`[data-hint="${f.k}"]`);
+        if (hintEl) hintEl.textContent = f.hint(cur, ctx) || '';
       }
     }
   };

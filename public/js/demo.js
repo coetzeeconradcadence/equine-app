@@ -1,8 +1,16 @@
 // Demo data with dates relative to today, so reminders and AHS status look realistic.
 import * as db from './db.js';
 import { today, addDays, addMonths, uid } from './util.js';
+import { seedFeedCatalogIfEmpty } from './feedseed.js';
 
 export async function loadDemo() {
+  await seedFeedCatalogIfEmpty();
+  const catalog = await db.all('feedcatalog');
+  const byName = (n) => catalog.find((c) => c.name === n);
+  const paddockPlus = byName('Paddock Plus');
+  const perfectBalance = byName('Perfect Balance');
+  const teff = byName('Teff hay (bale)');
+  const lucerne = byName('Lucerne hay (bale)');
   const t = today();
   const d = (n) => addDays(t, n);
   const vet = { id: uid(), name: 'Dr Sam Naidoo', role: 'Vet', practice: 'Hillside Equine Clinic (demo)', phone: '082 000 0001', area: 'Midlands' };
@@ -40,11 +48,16 @@ export async function loadDemo() {
   await H({ horseId: luna.id, type: 'Treatment / medication', date: d(-3), title: 'Bute for sore foot', product: 'Phenylbutazone', dose: '1 sachet twice daily', endDate: d(4), providerId: vet.id });
 
   const F = (o) => db.put('feed', o);
-  await F({ horseId: biscuit.id, name: 'Performance cubes', kind: 'Hard feed', amount: '2 kg', times: ['Morning', 'Evening'], active: true, startDate: d(-200), monthlyCost: 900 });
-  await F({ horseId: biscuit.id, name: 'Teff hay', kind: 'Roughage', amount: '1 bale/day', times: ['Morning', 'Evening', 'Night'], active: true, startDate: d(-400), monthlyCost: 1400 });
-  await F({ horseId: biscuit.id, name: 'Joint supplement', kind: 'Supplement', amount: '1 scoop', times: ['Morning'], active: true, startDate: d(-60), monthlyCost: 450 });
-  await F({ horseId: luna.id, name: 'Low-starch mix', kind: 'Hard feed', amount: '1.5 kg', times: ['Morning', 'Evening'], active: true, startDate: d(-120), notes: 'Soak beet pulp 4 hrs', monthlyCost: 800 });
-  await F({ horseId: luna.id, name: 'Lucerne', kind: 'Roughage', amount: '2 flakes', times: ['Midday'], active: true, startDate: d(-300), monthlyCost: 600 });
+  await F({ horseId: biscuit.id, name: 'Performance cubes', kind: 'Hard feed', amount: '2 kg', times: ['Morning', 'Evening'], active: true, startDate: d(-200), monthlyCost: 900,
+    ...(paddockPlus ? { feedId: paddockPlus.id, dailyQty: 3 } : {}) });
+  await F({ horseId: biscuit.id, name: 'Teff hay', kind: 'Roughage', amount: '1 bale/day', times: ['Morning', 'Evening', 'Night'], active: true, startDate: d(-400), monthlyCost: 1400,
+    ...(teff ? { feedId: teff.id, dailyQty: 15 } : {}) });
+  await F({ horseId: biscuit.id, name: 'Joint supplement', kind: 'Supplement', amount: '1 scoop', times: ['Morning'], active: true, startDate: d(-60), monthlyCost: 450,
+    ...(perfectBalance ? { feedId: perfectBalance.id, dailyQty: 1 } : {}) });
+  await F({ horseId: luna.id, name: 'Low-starch mix', kind: 'Hard feed', amount: '1.5 kg', times: ['Morning', 'Evening'], active: true, startDate: d(-120), notes: 'Soak beet pulp 4 hrs', monthlyCost: 800,
+    ...(paddockPlus ? { feedId: paddockPlus.id, dailyQty: 2 } : {}) });
+  await F({ horseId: luna.id, name: 'Lucerne', kind: 'Roughage', amount: '2 flakes', times: ['Midday'], active: true, startDate: d(-300), monthlyCost: 600,
+    ...(lucerne ? { feedId: lucerne.id, dailyQty: 8 } : {}) });
 
   const types = ['Flatwork', 'Jumping', 'Pole work', 'Hack / outride', 'Lesson', 'Rest day'];
   for (let i = 1; i <= 24; i++) {

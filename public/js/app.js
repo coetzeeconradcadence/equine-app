@@ -9,6 +9,8 @@ import { homeView } from './views/home.js';
 import { horsesView, horseView, setFilter } from './views/horses.js';
 import { remindersView, expensesView, eventsView, providersView, moreView, setListState, expensesCsv } from './views/lists.js';
 import { printView, feedboardView, togglePrint } from './views/print.js';
+import { feedOrderView, feedOrderCsv, setFeedOrderTab } from './views/feedorder.js';
+import { seedFeedCatalogIfEmpty } from './feedseed.js';
 import { blogView, postView, postPublishJson } from './views/blog.js';
 import { aiView, sendQuestion, setAiHorse, clearAi, buildContext, aiSelected } from './views/ai.js';
 import { settingsView } from './views/settings.js';
@@ -38,6 +40,7 @@ async function route() {
     case 'more': return ['more', moreView()];
     case 'print': return ['horses', await printView(b)];
     case 'feedboard': return ['more', await feedboardView()];
+    case 'feedorder': return ['more', await feedOrderView()];
     case 'blog': return ['more', b === 'draft' ? await postView(c, true) : b ? await postView(b) : await blogView()];
     case 'ai': return ['more', await aiView(params)];
     case 'settings': return ['more', await settingsView()];
@@ -139,6 +142,8 @@ const actions = {
     download(`${APP.name.toLowerCase()}-reminders.ics`, toIcs(items, (id) => names[id]), 'text/calendar');
   },
   'export-csv': async () => download(`${APP.name.toLowerCase()}-expenses-${today()}.csv`, await expensesCsv(), 'text/csv'),
+  'fo-tab': (el) => { setFeedOrderTab(el.dataset.v); render(); },
+  'fo-csv': async () => download(`${APP.name.toLowerCase()}-feed-order-${today()}.csv`, await feedOrderCsv(), 'text/csv'),
   print: () => window.print(),
   'toggle-print': (el) => { togglePrint(el.dataset.k); render(); },
   'share-horse': async (el) => {
@@ -216,6 +221,7 @@ function applyTheme(v) {
 (async function boot() {
   await db.ready;
   if (!db.persistent) $('#storage-banner').hidden = false;
+  await seedFeedCatalogIfEmpty();
   setCurrency(await db.getSetting('currency', APP.defaultCurrency));
   applyTheme(await db.getSetting('theme', 'auto'));
   if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});

@@ -47,6 +47,21 @@ export const FEED_TIMES = ['Morning', 'Midday', 'Evening', 'Night'];
 // Manual entry for now – see README for why (no public API for Garmin Blaze or similar devices yet).
 export const WEARABLE_DEVICES = ['Garmin Blaze', 'Polar Equine', 'Arioneo Equimetre', 'Hylete / other GPS tracker', 'Other'];
 
+// --- Feed catalog / feed ordering ---
+// Researched against real SA yard practice: most yards measure hard feed in scoops (a scoop's
+// weight varies by feed density, hence a per-feed scoopSizeKg rather than one fixed scoop size),
+// while a growing number now weigh feed on a kitchen/luggage scale in kg or grams for accuracy.
+// Bag sizes below are the common SA sizes we found (20kg for lucerne/chaff-type bags, 25kg/40kg
+// for meals & pellets, 50kg for some bulk bran/chop) – this matched real order sheets we checked.
+export const MEASURE_TYPES = ['Scoops', 'Weight (kg)'];
+export const SCOOP_SIZE_PRESETS = [0.1, 0.25, 0.5, 1, 1.5, 2, 3, 5];
+export const BAG_SIZE_PRESETS = [15, 20, 25, 40, 50];
+export const FEED_BRANDS = [
+  'Spurwing Horse Feeds', 'Epol Equine', 'Meadow Feeds', 'Voermol', 'Equi-Feeds',
+  'Kynoch Feeds', 'Cavalor', 'TRM', 'NAF', 'Molatek', 'Own mix / other',
+];
+export const FEED_CATEGORIES = ['Hard feed / concentrate', 'Balancer / pellet', 'Roughage (hay / lucerne / chaff)', 'Supplement', 'Bran / chop', 'Other'];
+
 const isResult = (v) => v.status === 'Completed';
 const disc = (...d) => (v) => isResult(v) && d.includes(v.discipline);
 
@@ -102,12 +117,45 @@ export const SCHEMAS = {
       { k: 'horseId', label: 'Horse', type: 'horse', req: true },
       { k: 'name', label: 'Feed / supplement', type: 'text', req: true, placeholder: 'e.g. Epol Equine Cool Performance' },
       { k: 'kind', label: 'Kind', type: 'select', options: FEED_KINDS, default: 'Hard feed' },
-      { k: 'amount', label: 'Amount per feed', type: 'text', placeholder: 'e.g. 1.5 kg / 2 scoops / 1 flake' },
+      { k: 'feedId', label: 'Link to feed catalog (for yard ordering)', type: 'feedcatalog', allowNone: '— custom / not in catalog —',
+        hint: 'Linking a feed here lets it appear on the yard-wide Feed order page with automatic totals and bag counts.' },
+      { k: 'dailyQty', label: 'Amount per day', type: 'number', step: '0.1', showIf: (v) => !!v.feedId,
+        hint: (v, ctx) => {
+          const c = (ctx.feedCatalog || []).find((x) => x.id === v.feedId);
+          if (!c) return '';
+          const unit = c.measure === 'Weight (kg)' ? 'kg' : 'scoops';
+          if (!v.dailyQty) return `Total fed per day, in ${unit}.`;
+          const kgPerDay = c.measure === 'Weight (kg)' ? Number(v.dailyQty) : Number(v.dailyQty) * Number(c.scoopSizeKg || 0);
+          const kgPerMonth = kgPerDay * 30;
+          const costPerMonth = c.bagSizeKg && c.pricePerBag ? (kgPerMonth / c.bagSizeKg) * c.pricePerBag : null;
+          return `≈ ${kgPerDay.toFixed(2)} kg/day · ${kgPerMonth.toFixed(1)} kg/month${costPerMonth ? ` · ≈ R${costPerMonth.toFixed(0)}/month` : ''}`;
+        } },
+      { k: 'amount', label: 'Amount per feed (free text, e.g. for hay/flakes)', type: 'text', placeholder: 'e.g. 1.5 kg / 2 scoops / 1 flake' },
       { k: 'times', label: 'Feeds', type: 'multi', options: FEED_TIMES, default: ['Morning', 'Evening'], full: true },
       { k: 'startDate', label: 'Started', type: 'date', default: () => today() },
       { k: 'active', label: 'Currently feeding', type: 'checkbox', default: true },
-      { k: 'monthlyCost', label: 'Approx. cost per month', type: 'money' },
+      { k: 'monthlyCost', label: 'Approx. cost per month (only if not linked to catalog above)', type: 'money', showIf: (v) => !v.feedId },
       { k: 'notes', label: 'Notes (soak, mix, instructions)', type: 'textarea', full: true },
+    ],
+  },
+
+  feedcatalog: {
+    store: 'feedcatalog', title: 'Horse feed',
+    fields: [
+      { k: 'name', label: 'Feed name', type: 'text', req: true, placeholder: 'e.g. Spurwing Paddock Plus' },
+      { k: 'brand', label: 'Brand', type: 'text', list: FEED_BRANDS, placeholder: 'e.g. Spurwing Horse Feeds' },
+      { k: 'category', label: 'Category', type: 'select', options: FEED_CATEGORIES, default: 'Hard feed / concentrate' },
+      { k: 'measure', label: 'How is this fed out?', type: 'select', options: MEASURE_TYPES, default: 'Scoops', req: true,
+        hint: 'Choose "Scoops" if the yard uses a scoop, or "Weight (kg)" if you weigh feed with a scale.' },
+      { k: 'scoopSizeKg', label: 'Scoop size (kg)', type: 'number', step: '0.05', list: SCOOP_SIZE_PRESETS, req: true,
+        showIf: (v) => v.measure !== 'Weight (kg)',
+        hint: 'How much this feed’s scoop weighs – varies by feed, e.g. 100g–1kg for supplements, 1–2kg for hard feed, up to 5kg for lucerne/chaff.' },
+      { k: 'bagSizeKg', label: 'Bag size (kg)', type: 'number', step: '1', list: BAG_SIZE_PRESETS, req: true,
+        hint: 'Used to work out how many bags to order per week/month.' },
+      { k: 'pricePerBag', label: 'Price per bag', type: 'money' },
+      { k: 'supplier', label: 'Usual supplier', type: 'provider', allowNone: '— none —' },
+      { k: 'active', label: 'Show in feed order setup', type: 'checkbox', default: true },
+      { k: 'notes', label: 'Notes', type: 'textarea', full: true },
     ],
   },
 

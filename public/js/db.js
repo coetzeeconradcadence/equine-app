@@ -4,10 +4,10 @@
 import { uid } from './util.js';
 
 const DB_NAME = 'hoofnote';
-const VERSION = 1;
+const VERSION = 2; // bumped to add the 'feedcatalog' store — onupgradeneeded creates any store missing from an older DB
 export const STORES = [
   'horses', 'health', 'feed', 'training', 'events', 'expenses',
-  'providers', 'docs', 'reminders', 'posts', 'meta',
+  'providers', 'docs', 'reminders', 'posts', 'meta', 'feedcatalog',
 ];
 
 let idb = null;

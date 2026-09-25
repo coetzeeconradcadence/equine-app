@@ -137,12 +137,12 @@ function feeding(d) {
   const monthly = sum(active, (f) => f.monthlyCost);
   return html`
     <div class="row between"><h2 style="margin:0">Feeding plan</h2>
-      <div class="row">${addBtn('feed', 'Add feed', { horseId: d.horse.id }, 'primary sm')}<a class="btn sm" href="#/feedboard">🖨️ Feed board</a></div></div>
+      <div class="row">${addBtn('feed', 'Add feed', { horseId: d.horse.id }, 'primary sm')}<a class="btn sm" href="#/feedboard">🖨️ Feed board</a><a class="btn sm" href="#/feedorder">🧮 Feed order</a></div></div>
     ${active.length ? html`
       <div class="table-wrap card flat" style="margin-top:12px"><table>
         <thead><tr><th>Feed</th>${FEED_TIMES.map((t) => html`<th>${t}</th>`)}</tr></thead>
         <tbody>${active.map((f) => html`<tr class="clickable" data-action="edit" data-schema="feed" data-id="${f.id}" style="cursor:pointer">
-          <td><strong>${f.name}</strong><div class="small muted">${f.kind}${f.notes ? ' · ' + f.notes : ''}</div></td>
+          <td><strong>${f.name}</strong><div class="small muted">${f.kind}${f.dailyQty ? ' · ' + f.dailyQty + ' /day' : ''}${f.notes ? ' · ' + f.notes : ''}</div></td>
           ${FEED_TIMES.map((t) => html`<td>${(f.times || []).includes(t) ? f.amount || '✓' : ''}</td>`)}</tr>`)}</tbody>
       </table></div>
       ${monthly ? html`<p class="small muted" style="margin-top:8px">Approx. feed cost: <strong>${money(monthly)}</strong> / month</p>` : ''}`
