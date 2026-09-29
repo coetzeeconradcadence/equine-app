@@ -7,7 +7,7 @@ import { APP } from '../config.js';
 
 export async function homeView() {
   const data = await loadAll();
-  const [expenses, providers] = await Promise.all([db.all('expenses'), db.all('providers')]);
+  const [expenses, providers, profile] = await Promise.all([db.all('expenses'), db.all('providers'), db.getSetting('ownerProfile')]);
   const horses = sortBy(data.horses, (h) => h.name.toLowerCase());
   const byId = Object.fromEntries(horses.map((h) => [h.id, h]));
   const due = computeDue(data, { horizon: 21 });
@@ -20,7 +20,7 @@ export async function homeView() {
   const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   if (!horses.length) {
-    const [profile, onboardingSeen] = await Promise.all([db.getSetting('ownerProfile'), db.getSetting('onboardingSeen', false)]);
+    const onboardingSeen = await db.getSetting('onboardingSeen', false);
     const whatYouCanDo = html`
       <div class="card flat">
         <h2>What you can do</h2>
@@ -67,7 +67,7 @@ export async function homeView() {
   }
 
   return html`
-    <div class="page-head"><h1>${greet} 👋</h1></div>
+    <div class="page-head"><h1>${greet}${profile?.firstName ? ', ' + profile.firstName : ''} 👋</h1></div>
     <div class="stats">
       <a class="stat" href="#/reminders" style="text-decoration:none;color:inherit"><div class="label">Due in 3 weeks</div><div class="value">${due.length}${overdue ? html` <span class="pill bad">${overdue} overdue</span>` : ''}</div></a>
       <a class="stat" href="#/expenses" style="text-decoration:none;color:inherit"><div class="label">Spent this month</div><div class="value">${money(thisMonth)}</div></a>

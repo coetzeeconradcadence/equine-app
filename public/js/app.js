@@ -58,7 +58,7 @@ async function route() {
     case 'reminders': return ['reminders', await remindersView()];
     case 'expenses': return ['expenses', await expensesView()];
     case 'events': return ['more', await eventsView()];
-    case 'providers': return ['more', await providersView()];
+    case 'providers': case 'stable-yard': return ['more', await providersView()];
     case 'more': return ['more', moreView()];
     case 'print': return ['horses', await printView(b)];
     case 'feedboard': return ['more', await feedboardView()];
@@ -118,7 +118,7 @@ function quickAdd() {
   const opts = [
     ['health', '🩺', 'Health record'], ['training', '🏇', 'Ride / training'], ['expense', '💰', 'Expense'],
     ['feed', '🌾', 'Feed item'], ['event', '🏆', 'Show / result'], ['reminder', '🔔', 'Reminder'],
-    ['doc', '📄', 'Document'], ['horse', '🐴', 'New horse'], ['provider', '📇', 'Contact'],
+    ['doc', '📄', 'Document'], ['horse', '🐴', 'New horse'], ['provider', '🏇', 'Yard contact'],
   ];
   openSheet('Add…', `<div class="grid two">${opts.map(([k, i, l]) => `<button class="btn block" data-q="${k}" style="justify-content:flex-start">${i} ${l}</button>`).join('')}</div>`, (d) => {
     $$('[data-q]', d).forEach((b) => (b.onclick = () => {
@@ -279,7 +279,7 @@ function bindProfileForm() {
     if (!firstName) { toast('Please add your first name'); pf.elements.firstName.focus(); return; }
     const profile = {
       firstName, lastName: trim('lastName'), email: trim('email'), phone: trim('phone'),
-      address: trim('address'), keeping: fd.get('keeping') || 'Livery', yard: trim('yard'), trainer: trim('trainer'),
+      address: trim('address'), keeping: fd.get('keeping') || 'Livery', yard: trim('yard'),
     };
     await db.setSetting('ownerProfile', profile);
     await db.setSetting('onboardingSeen', true);

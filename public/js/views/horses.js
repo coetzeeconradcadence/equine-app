@@ -1,9 +1,9 @@
 import * as db from '../db.js';
-import { html, raw, esc, fmtDate, ageFrom, today, money, sum, sortBy, groupBy, addDays, parse, iso, monthKey, fmtMonth } from '../util.js';
+import { html, raw, esc, fmtDate, ageFrom, today, money, sum, sortBy, groupBy, addDays, parse, iso, monthKey, fmtMonth, waNumber } from '../util.js';
 import { avatar, pill, empty, addBtn, dueItem, healthItem, eventItem, expenseItem, trainingItem, resultLine, sparkline, bars } from './components.js';
 import { ahsTravel, ahsSeason, eventTravelCheck, AHS_DISCLAIMER } from '../ahs.js';
 import { loadAll, computeDue, dueTone } from '../due.js';
-import { healthIcon, FEED_TIMES, DISCIPLINES } from '../schemas.js';
+import { healthIcon, FEED_TIMES, DISCIPLINES, CARE_TEAM_FIELDS } from '../schemas.js';
 
 export async function horsesView() {
   const [horses, health] = await Promise.all([db.all('horses'), db.all('health')]);
@@ -99,6 +99,20 @@ async function overview(d) {
         </tbody></table>
       </div>
     </div>
+
+    ${(() => {
+      const team = CARE_TEAM_FIELDS.map((f) => ({ ...f, p: d.providersById[horse[f.k]] })).filter((f) => f.p);
+      if (!team.length) return '';
+      return html`
+        <div class="section"><h2>Care team</h2><a class="small" href="#/stable-yard">Manage</a></div>
+        <div class="list">${team.map((f) => html`
+          <div class="item">
+            <div class="grow"><div class="title">${f.p.name}</div><div class="meta">${f.label}${f.p.phone ? ' · ' + f.p.phone : ''}</div></div>
+            <div class="actions">
+              ${f.p.phone ? html`<a class="btn sm" href="tel:${f.p.phone.replace(/\s/g, '')}" aria-label="Call">📞</a><a class="btn sm" href="https://wa.me/${waNumber(f.p.phone)}" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>` : ''}
+            </div>
+          </div>`)}</div>`;
+    })()}
 
     <div class="section"><h2>Due for ${horse.name}</h2>${addBtn('reminder', 'Reminder', { horseId: horse.id })}</div>
     <div class="list">${due.length ? due.map((i) => dueItem(i, byId, { showHorse: false })) : empty('Nothing due in the next 60 days.')}</div>

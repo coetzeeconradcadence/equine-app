@@ -43,9 +43,9 @@ export async function profileSetupView() {
               <label><input type="radio" name="keeping" value="Livery" ${keeping === 'Livery' ? 'checked' : ''}> 🐎 Livery / boarding at another yard</label>
             </div>
           </div>
-          <div class="field"><label for="pf_yard" id="pf_yard_label">${yardLabel}</label><input id="pf_yard" name="yard" value="${profile.yard || ''}" placeholder="e.g. Kyalami Equestrian Park"></div>
-          <div class="field"><label for="pf_trainer">Trainer / coach (if any)</label><input id="pf_trainer" name="trainer" value="${profile.trainer || ''}" placeholder="e.g. Jane Smith"></div>
+          <div class="field full"><label for="pf_yard" id="pf_yard_label">${yardLabel}</label><input id="pf_yard" name="yard" value="${profile.yard || ''}" placeholder="e.g. Kyalami Equestrian Park"></div>
         </div>
+        <p class="small muted" style="margin-top:2px">Trainer, rider, groom, farrier and vet are set up per horse – see <a href="#/stable-yard">My Stable Yard</a> once you've added a horse.</p>
       </div>
 
       <div class="row" style="margin-top:14px">

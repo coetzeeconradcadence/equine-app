@@ -17,19 +17,23 @@ export async function loadDemo() {
   const farrier = { id: uid(), name: 'Pieter van Wyk', role: 'Farrier', phone: '083 000 0002', area: 'Howick' };
   const dentist = { id: uid(), name: 'Lindiwe Mokoena', role: 'Dentist', phone: '084 000 0003' };
   const coach = { id: uid(), name: 'Jess Carter', role: 'Coach / trainer', phone: '072 000 0004', notes: 'Lessons Tue & Thu' };
+  const groom = { id: uid(), name: 'Nomvula Dlamini', role: 'Groom', phone: '076 000 0006' };
+  const rider = { id: uid(), name: 'Kayla Botha', role: 'Rider', phone: '079 000 0007', notes: 'Rides Biscuit on weekends' };
   const feedstore = { id: uid(), name: 'Country Feeds (demo)', role: 'Feed store', phone: '033 000 0005' };
-  for (const p of [vet, farrier, dentist, coach, feedstore]) await db.put('providers', p);
+  for (const p of [vet, farrier, dentist, coach, groom, rider, feedstore]) await db.put('providers', p);
 
   const biscuit = await db.put('horses', {
     name: 'Biscuit', showName: 'Golden Biscuit II', breed: 'SA Warmblood', colour: 'Chestnut', sex: 'Gelding',
     dob: addMonths(t, -12 * 11 - 3), height: '16.2', discipline: 'Show jumping', microchip: '977200000000001',
     passportNo: 'SA-DEMO-0001', yard: 'Oakridge Stables', ahsZone: 'Vaccinate annually (most of SA)',
     alerts: 'Allergic to penicillin. Bites when girthing – tie up first.', markings: 'Wide blaze, two white socks behind',
+    trainerId: coach.id, riderId: rider.id, groomId: groom.id, farrierId: farrier.id, vetId: vet.id,
   });
   const luna = await db.put('horses', {
     name: 'Luna', showName: 'Moonlight Sonata', breed: 'Thoroughbred', colour: 'Grey', sex: 'Mare',
     dob: addMonths(t, -12 * 8 - 7), height: '16.0', discipline: 'Dressage', passportNo: 'SA-DEMO-0002',
     yard: 'Oakridge Stables', ahsZone: 'Vaccinate annually (most of SA)',
+    trainerId: coach.id, farrierId: farrier.id, vetId: vet.id,
   });
 
   const H = (o) => db.put('health', o);

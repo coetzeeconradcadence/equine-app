@@ -93,13 +93,13 @@ export async function eventsView() {
     <div class="list">${list.length ? list.map((e) => eventItem(e, byId, { showHorse: true })) : empty(tab === 'upcoming' ? 'No shows entered.' : 'No results yet.')}</div>`;
 }
 
-// ---------- Providers ----------
+// ---------- My Stable Yard (people: trainer, rider, groom, farrier, vet & other contacts) ----------
 export async function providersView() {
   const providers = sortBy(await db.all('providers'), (p) => p.role + p.name);
   const groups = groupBy(providers, (p) => p.role);
   return html`
-    <div class="page-head"><h1>Contacts</h1>${addBtn('provider', 'Add contact', {}, 'primary sm')}</div>
-    <p class="small muted">Your vet, farrier, dentist, physio, coach, transporter and feed store – one tap to call or WhatsApp.</p>
+    <div class="page-head"><h1>🏇 My Stable Yard</h1>${addBtn('provider', 'Add person', {}, 'primary sm')}</div>
+    <p class="small muted">Everyone involved with your horses – trainer, rider, groom, farrier, vet, dentist and more. Add them here once, then choose them for each horse under Edit horse, or whenever you log a visit or expense.</p>
     ${providers.length ? Object.entries(groups).map(([role, ps]) => html`
       <div class="section"><h2>${role}</h2></div>
       <div class="list">${ps.map((p) => html`
@@ -111,7 +111,7 @@ export async function providersView() {
             ${p.phone ? html`<a class="btn sm" href="tel:${p.phone.replace(/\s/g, '')}" aria-label="Call">📞</a><a class="btn sm" href="https://wa.me/${waNumber(p.phone)}" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>` : ''}
             ${p.email ? html`<a class="btn sm" href="mailto:${p.email}" aria-label="Email">✉️</a>` : ''}
           </div>
-        </div>`)}</div>`) : empty('No contacts yet.', addBtn('provider', 'Add your vet', { role: 'Vet' }, 'primary'))}`;
+        </div>`)}</div>`) : empty('Nobody added yet.', addBtn('provider', 'Add your trainer, vet or farrier', {}, 'primary'))}`;
 }
 
 // ---------- More ----------
@@ -121,10 +121,10 @@ export function moreView() {
   return html`
     <h1>More</h1>
     <div class="list">
-      ${link('#/profile-setup', '👤', 'My profile', 'Your details, yard address and trainer')}
+      ${link('#/profile-setup', '👤', 'My profile', 'Your own details and yard address')}
+      ${link('#/stable-yard', '🏇', 'My Stable Yard', 'Trainer, rider, groom, farrier, vet & other contacts')}
       ${link('#/calendar', '📅', 'Calendar', 'Month view of shows, reminders and health/farrier due dates')}
       ${link('#/events', '🏆', 'Shows & events', 'Entries, results and AHS travel checks')}
-      ${link('#/providers', '📇', 'Contacts', 'Vet, farrier, dentist, coach, transport')}
       ${link('#/feedboard', '🌾', 'Yard feed board', 'Printable feed chart for all horses')}
       ${link('#/feedorder', '🧮', 'Feed order & catalog', 'Scoops, bags and cost per horse, worked out for you')}
       ${link('#/ai', '✨', 'Ask AI', 'Questions answered using your horse’s records')}

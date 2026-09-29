@@ -1,5 +1,5 @@
 // Network-first service worker: always fresh when online, still opens offline.
-const CACHE = 'hoofnote-v4';
+const CACHE = 'hoofnote-v5';
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'icons/icon.svg',
   'js/app.js', 'js/config.js', 'js/util.js', 'js/db.js', 'js/forms.js', 'js/schemas.js', 'js/ahs.js', 'js/due.js', 'js/demo.js', 'js/feedseed.js',

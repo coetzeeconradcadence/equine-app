@@ -43,7 +43,7 @@ function fieldHtml(f, v, ctx) {
     case 'provider': {
       const opts = ctx.providers.map((p) => `<option value="${p.id}" ${p.id === val ? 'selected' : ''}>${esc(p.name)} (${esc(p.role)})</option>`).join('');
       input = `<select ${common}><option value="">— none —</option>${opts}</select>`;
-      if (!ctx.providers.length) input += '<span class="hint">Add your vet, farrier etc. under More → Contacts.</span>';
+      if (!ctx.providers.length) input += '<span class="hint">Add your vet, farrier, trainer etc. under More → My Stable Yard.</span>';
       break;
     }
     case 'feedcatalog': {

@@ -39,7 +39,18 @@ export const EXPENSE_CATEGORIES = [
 ];
 export const DISCIPLINES = ['Dressage', 'Show jumping', 'Eventing', 'Equitation', 'Endurance', 'Working riders', 'Western / reining', 'Vaulting', 'Showing', 'Polo / polocrosse', 'Other'];
 export const TRAINING_TYPES = ['Flatwork', 'Dressage', 'Jumping', 'Pole work', 'Cross-country', 'Hack / outride', 'Lunging', 'Groundwork', 'Fitness / hill work', 'Lesson', 'Rest day', 'Other'];
-export const PROVIDER_ROLES = ['Vet', 'Farrier', 'Dentist', 'Physio / chiro', 'Saddle fitter', 'Coach / trainer', 'Transport', 'Feed store', 'Yard / livery', 'Insurance', 'Other'];
+export const PROVIDER_ROLES = ['Vet', 'Farrier', 'Dentist', 'Physio / chiro', 'Saddle fitter', 'Coach / trainer', 'Rider', 'Groom', 'Transport', 'Feed store', 'Yard / livery', 'Insurance', 'Other'];
+// Per-horse "care team" – which yard contact (from PROVIDER_ROLES above) is this horse's regular
+// trainer, rider, groom, farrier and vet. A horse can have more than one of each over time (or a
+// visiting farrier vs. its usual one), so these are just the *default* / usual person – individual
+// health records, training sessions etc. can still name someone different for a one-off visit.
+export const CARE_TEAM_FIELDS = [
+  { k: 'trainerId', label: 'Trainer / coach' },
+  { k: 'riderId', label: 'Regular rider' },
+  { k: 'groomId', label: 'Groom' },
+  { k: 'farrierId', label: 'Farrier' },
+  { k: 'vetId', label: 'Vet' },
+];
 export const DOC_CATEGORIES = ['Passport', 'Registration', 'Vaccination record', 'Vet certificate', 'Movement permit', 'Insurance', 'X-ray / scan', 'Invoice / receipt', 'Other'];
 export const SEXES = ['Mare', 'Gelding', 'Stallion', 'Colt', 'Filly'];
 export const FEED_KINDS = ['Hard feed', 'Roughage', 'Supplement', 'Medication', 'Other'];
@@ -94,6 +105,8 @@ export const SCHEMAS = {
       { k: 'saefNo', label: 'SAEF / society reg. no.', type: 'text' },
       { k: 'yard', label: 'Yard / stable', type: 'text' },
       { k: 'owner', label: 'Owner', type: 'text' },
+      ...CARE_TEAM_FIELDS.map((f, i) => ({ ...f, type: 'provider', allowNone: '— none —',
+        full: i === 0, hint: i === 0 ? 'Who\'s usually involved with this horse – pick from your Stable Yard contacts (More → My Stable Yard), or add them there first.' : undefined })),
       { k: 'insurance', label: 'Insurer & policy', type: 'text' },
       { k: 'markings', label: 'Markings', type: 'textarea', full: true },
       { k: 'alerts', label: 'Important alerts (allergies, vices, handling)', type: 'textarea', full: true, hint: 'Shown at the top of the profile and on the printed passport.' },
@@ -240,7 +253,7 @@ export const SCHEMAS = {
   },
 
   provider: {
-    store: 'providers', title: 'Contact',
+    store: 'providers', title: 'Yard contact',
     fields: [
       { k: 'name', label: 'Name', type: 'text', req: true },
       { k: 'role', label: 'Role', type: 'select', options: PROVIDER_ROLES, req: true },

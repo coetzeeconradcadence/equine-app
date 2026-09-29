@@ -17,10 +17,12 @@ export async function settingsView() {
         <h2>Your profile</h2>
         ${profile ? html`
           <p class="small muted" style="margin-bottom:10px">${[profile.firstName + ' ' + (profile.lastName || ''), profile.phone, profile.email].filter(Boolean).join(' · ')}
-            ${profile.yard ? html`<br>${profile.keeping === 'Own stables' ? 'Own stables' : 'Livery'}: ${profile.yard}` : ''}
-            ${profile.trainer ? html` · Trainer: ${profile.trainer}` : ''}</p>` :
+            ${profile.yard ? html`<br>${profile.keeping === 'Own stables' ? 'Own stables' : 'Livery'}: ${profile.yard}` : ''}</p>` :
           html`<p class="small muted" style="margin-bottom:10px">Not set up yet.</p>`}
-        <a class="btn sm" href="#/profile-setup">${profile ? 'Edit profile' : 'Set up my profile'}</a>
+        <div class="row">
+          <a class="btn sm" href="#/profile-setup">${profile ? 'Edit profile' : 'Set up my profile'}</a>
+          <a class="btn sm" href="#/stable-yard">🏇 My Stable Yard</a>
+        </div>
       </div>
 
       <div class="card">
