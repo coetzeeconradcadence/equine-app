@@ -20,27 +20,49 @@ export async function homeView() {
   const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   if (!horses.length) {
+    const [profile, onboardingSeen] = await Promise.all([db.getSetting('ownerProfile'), db.getSetting('onboardingSeen', false)]);
+    const whatYouCanDo = html`
+      <div class="card flat">
+        <h2>What you can do</h2>
+        <ul>
+          <li>Health records with smart due-date reminders (vaccines, farrier, dentist, deworming)</li>
+          <li><strong>AHS travel-ready check</strong> – know if your horse can travel to a Western Cape show</li>
+          <li>Feeding plans & a printable yard feed board</li>
+          <li>Training log, shows & results, costs per horse</li>
+          <li>Documents, contacts, printable horse passport, and an AI helper that reads your records</li>
+        </ul>
+      </div>`;
+
+    if (!profile && !onboardingSeen) {
+      return html`
+        <div class="stack">
+          <div class="card">
+            <h1>Welcome to ${APP.name} 🐴</h1>
+            <p class="muted">${APP.tagline}</p>
+            <p>Let's get you set up – tell us a bit about you and where your horses are kept, then add your first horse.</p>
+            <div class="row">
+              <a class="btn primary" href="#/profile-setup">Set up my profile</a>
+              <button data-action="skip-profile">Skip, just add a horse</button>
+              <button data-action="load-demo">Load demo data</button>
+            </div>
+          </div>
+          ${whatYouCanDo}
+        </div>`;
+    }
+
     return html`
       <div class="stack">
         <div class="card">
-          <h1>Welcome to ${APP.name} 🐴</h1>
+          <h1>${profile?.firstName ? `Welcome, ${profile.firstName}! 🐴` : `Welcome to ${APP.name} 🐴`}</h1>
           <p class="muted">${APP.tagline}</p>
           <p>Start by adding your first horse. You can also load demo horses to explore.</p>
           <div class="row">
             ${addBtn('horse', 'Add your first horse', {}, 'primary')}
             <button data-action="load-demo">Load demo data</button>
+            ${!profile ? html`<a class="btn" href="#/profile-setup">Set up my profile</a>` : ''}
           </div>
         </div>
-        <div class="card flat">
-          <h2>What you can do</h2>
-          <ul>
-            <li>Health records with smart due-date reminders (vaccines, farrier, dentist, deworming)</li>
-            <li><strong>AHS travel-ready check</strong> – know if your horse can travel to a Western Cape show</li>
-            <li>Feeding plans & a printable yard feed board</li>
-            <li>Training log, shows & results, costs per horse</li>
-            <li>Documents, contacts, printable horse passport, and an AI helper that reads your records</li>
-          </ul>
-        </div>
+        ${whatYouCanDo}
       </div>`;
   }
 

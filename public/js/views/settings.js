@@ -5,6 +5,7 @@ import { APP } from '../config.js';
 export async function settingsView() {
   const currency = await db.getSetting('currency', APP.defaultCurrency);
   const theme = await db.getSetting('theme', 'auto');
+  const profile = await db.getSetting('ownerProfile');
   const counts = {};
   for (const s of ['horses', 'health', 'feed', 'training', 'events', 'expenses', 'providers', 'docs', 'reminders', 'posts']) counts[s] = (await db.all(s)).length;
   let estimate = '';
@@ -12,6 +13,16 @@ export async function settingsView() {
   return html`
     <h1>Settings</h1>
     <div class="stack">
+      <div class="card">
+        <h2>Your profile</h2>
+        ${profile ? html`
+          <p class="small muted" style="margin-bottom:10px">${[profile.firstName + ' ' + (profile.lastName || ''), profile.phone, profile.email].filter(Boolean).join(' · ')}
+            ${profile.yard ? html`<br>${profile.keeping === 'Own stables' ? 'Own stables' : 'Livery'}: ${profile.yard}` : ''}
+            ${profile.trainer ? html` · Trainer: ${profile.trainer}` : ''}</p>` :
+          html`<p class="small muted" style="margin-bottom:10px">Not set up yet.</p>`}
+        <a class="btn sm" href="#/profile-setup">${profile ? 'Edit profile' : 'Set up my profile'}</a>
+      </div>
+
       <div class="card">
         <h2>Preferences</h2>
         <div class="form-grid">

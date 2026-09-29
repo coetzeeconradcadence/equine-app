@@ -121,6 +121,7 @@ export function moreView() {
   return html`
     <h1>More</h1>
     <div class="list">
+      ${link('#/profile-setup', '👤', 'My profile', 'Your details, yard address and trainer')}
       ${link('#/calendar', '📅', 'Calendar', 'Month view of shows, reminders and health/farrier due dates')}
       ${link('#/events', '🏆', 'Shows & events', 'Entries, results and AHS travel checks')}
       ${link('#/providers', '📇', 'Contacts', 'Vet, farrier, dentist, coach, transport')}

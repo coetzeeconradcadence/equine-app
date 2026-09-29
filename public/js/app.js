@@ -12,6 +12,7 @@ import { printView, feedboardView, togglePrint } from './views/print.js';
 import { feedOrderView, feedOrderCsv, setFeedOrderTab, addFeedOrderColumn, removeFeedOrderColumn } from './views/feedorder.js';
 import { calendarView, setCalMonth, calendarDayBody } from './views/calendar.js';
 import { helpView } from './views/help.js';
+import { profileSetupView } from './views/profile.js';
 import { seedFeedCatalogIfEmpty } from './feedseed.js';
 import { blogView, postView, postPublishJson } from './views/blog.js';
 import { aiView, sendQuestion, setAiHorse, clearAi, buildContext, aiSelected } from './views/ai.js';
@@ -64,6 +65,7 @@ async function route() {
     case 'feedorder': return ['more', await feedOrderView()];
     case 'calendar': return ['more', await calendarView()];
     case 'help': return ['more', helpView()];
+    case 'profile-setup': return ['more', await profileSetupView()];
     case 'blog': return ['more', b === 'draft' ? await postView(c, true) : b ? await postView(b) : await blogView()];
     case 'ai': return ['more', await aiView(params)];
     case 'settings': return ['more', await settingsView()];
@@ -101,7 +103,7 @@ db.onChange(() => { clearTimeout(t); t = setTimeout(render, 30); });
 function renderFab(nav) {
   let fab = $('#fab');
   const { parts } = parseHash();
-  const hide = ['print', 'ai', 'blog', 'settings', 'feedboard'].includes(parts[0]);
+  const hide = ['print', 'ai', 'blog', 'settings', 'feedboard', 'profile-setup'].includes(parts[0]);
   if (hide) { fab && fab.remove(); return; }
   if (!fab) {
     fab = document.createElement('button');
@@ -205,6 +207,11 @@ const actions = {
     openSheet('What the AI sees', `<p class="small muted">This summary is sent with your question.</p><pre style="white-space:pre-wrap;font-size:.8rem">${ctx.replace(/</g, '&lt;')}</pre>`);
   },
   'load-demo': async () => { await loadDemo(); toast('Demo horses loaded'); location.hash = '#/'; },
+  'skip-profile': async () => {
+    await db.setSetting('onboardingSeen', true);
+    if (!(await db.all('horses')).length) { location.hash = '#/horses'; openForm('horse'); }
+    else history.back();
+  },
   'clear-all': async () => {
     if (!confirm('Delete ALL horses and records on this device? Download a backup first if unsure.')) return;
     if (!confirm('Really delete everything?')) return;
@@ -251,6 +258,40 @@ function bindView() {
     ta.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } };
     const chat = $('#chat'); if (chat && chat.children.length > 1) form.scrollIntoView({ block: 'end' });
   }
+  bindProfileForm();
+}
+
+function bindProfileForm() {
+  const pf = $('#profile-form');
+  if (!pf) return;
+  const yardLabel = $('#pf_yard_label', pf);
+  const updateYardLabel = () => {
+    const keeping = pf.elements.keeping.value;
+    yardLabel.textContent = keeping === 'Own stables' ? 'What do you call your stables? (optional)' : 'Livery yard name';
+  };
+  updateYardLabel();
+  pf.addEventListener('change', (e) => { if (e.target.name === 'keeping') updateYardLabel(); });
+  pf.onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(pf);
+    const trim = (k) => String(fd.get(k) || '').trim();
+    const firstName = trim('firstName');
+    if (!firstName) { toast('Please add your first name'); pf.elements.firstName.focus(); return; }
+    const profile = {
+      firstName, lastName: trim('lastName'), email: trim('email'), phone: trim('phone'),
+      address: trim('address'), keeping: fd.get('keeping') || 'Livery', yard: trim('yard'), trainer: trim('trainer'),
+    };
+    await db.setSetting('ownerProfile', profile);
+    await db.setSetting('onboardingSeen', true);
+    if (pf.dataset.firstRun === '1') {
+      toast(`Thanks, ${firstName}! Now let's add your first horse.`);
+      location.hash = '#/horses';
+      if (!(await db.all('horses')).length) openForm('horse');
+    } else {
+      toast('Profile saved');
+      history.back();
+    }
+  };
 }
 
 function applyTheme(v) {

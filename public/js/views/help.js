@@ -42,6 +42,7 @@ const SECTIONS = [
       { icon: '📇', title: 'Contacts', body: 'Your vet, farrier, dentist, physio, coach, transporter and feed store, grouped by role, with one-tap call and WhatsApp.' },
       { icon: '✨', title: 'Ask AI', body: 'Ask a question in plain English about a horse and get an answer based on that horse\'s own records – health history, feeding, recent training and results. A guide only, never a substitute for your vet.' },
       { icon: '📰', title: 'Blog & videos', body: 'Articles and training videos, with YouTube embeds.' },
+      { icon: '👤', title: 'My profile', body: 'Your name, contact details, where your horses are kept (own stables or livery) and your trainer/coach – shown once when you first set up, editable any time.' },
       { icon: '🐴', title: 'Welcome screen', body: 'Replay the app\'s intro screen any time.' },
       { icon: '⚙️', title: 'Settings & backup', body: 'Currency and light/dark theme, download or restore a full backup of your data, load demo horses to try things out, or delete everything and start fresh.' },
     ],
